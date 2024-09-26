@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau de Bord - Ecobill Pay</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Tableau de Bord</h1>
+        <nav>
+            <a href="index.html">Accueil</a>
+            <a href="#" id="logout">Déconnexion</a>
+        </nav>
+    </header>
+    <main>
+        <section>
+            <h2>Générer un QR Code</h2>
+            <button id="generate-qr">Générer QR Code</button>
+            <div id="qr-code"></div>
+        </section>
+        <section>
+            <h2>Transactions Récentes</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Client</th>
+                        <th>Montant</th>
+                        <th>Date</th>
+                        <th>Statut</th>
+                    </tr>
+                </thead>
+                <tbody id="transactions">
+                    <!-- Transactions seront ajoutées ici -->
+                </tbody>
+            </table>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2024 Ecobill Pay</p>
+    </footer>
+
+    <!-- Bibliothèque QRCode.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        document.getElementById('logout').addEventListener('click', () => {
+            localStorage.removeItem('token');
+            window.location.href = 'login.html';
+        });
+
+        document.getElementById('generate-qr').addEventListener('click', async () => {
+            const token = localStorage.getItem('token');
+            const response = await fetch('/generate-qr', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+            const data = await response.json();
+            if (data.qrData) {
+                // Effacer le QR Code précédent
+                document.getElementById('qr-code').innerHTML = '';
+                // Générer le QR Code
+                new QRCode(document.getElementById('qr-code'), data.qrData);
+            } else {
+                alert(data.error);
+            }
+        });
+
+        // Fonction pour charger les transactions
+        async function loadTransactions() {
+            const token = localStorage.getItem('token');
+            const response = await fetch('/transactions', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+            const data = await response.json();
+            const transactions = document.getElementById('transactions');
+            transactions.innerHTML = ''; // Vider les transactions précédentes
+            data.transactions.forEach(tx => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${tx.id}</td>
+                    <td>${tx.clientName}</td>
+                    <td>${tx.amount}</td>
+                    <td>${tx.date}</td>
+                    <td>${tx.status}</td>
+                `;
+                transactions.appendChild(row);
+            });
+        }
+
+        loadTransactions();
+    </script>
+</body>
+</html>
