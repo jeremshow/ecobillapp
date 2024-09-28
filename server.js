@@ -142,6 +142,20 @@ app.post('/login', async (req, res) => {
     }
 });
 
+// Middleware pour rediriger vers le bon tableau de bord
+app.get('/dashboard', authenticate, (req, res) => {
+    const userType = req.user.userType;
+    if (userType === 'admin') {
+        res.sendFile(path.join(__dirname, 'public', 'dashboard_admin.html')); // Chemin vers dashboard_admin.html
+    } else if (userType === 'client') {
+        res.sendFile(path.join(__dirname, 'public', 'dashboard_client.html')); // Chemin vers dashboard_client.html
+    } else if (userType === 'merchant') {
+        res.sendFile(path.join(__dirname, 'public', 'dashboard_merchand.html')); // Chemin vers dashboard_merchand.html
+    } else {
+        res.status(403).send('Accès interdit'); // Si le type d'utilisateur n'est pas reconnu
+    }
+});
+
 // Route pour récupérer les utilisateurs (pour les administrateurs)
 app.get('/users', authenticate, async (req, res) => {
     if (req.user.userType !== 'admin' && req.user.email !== 'jeremy.ecobill@gmail.com') {
