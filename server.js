@@ -143,7 +143,7 @@ app.post('/login', async (req, res) => {
 });
 
 // Middleware pour rediriger vers le bon tableau de bord
-app.get('/dashboard', authenticate, (req, res) => {
+app.get('/dashboard.html', authenticate, (req, res) => {
     const userType = req.user.userType;
     if (userType === 'admin') {
         res.sendFile(path.join(__dirname, 'public', 'dashboard_admin.html')); // Chemin vers dashboard_admin.html
