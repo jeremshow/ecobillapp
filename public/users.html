@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liste des Utilisateurs</title>
+</head>
+<body>
+    <h1>Utilisateurs</h1>
+    <ul id="userList"></ul>
+
+    <script>
+        async function fetchUsers() {
+            const token = 'YOUR_JWT_TOKEN'; // Remplace par le JWT de l'utilisateur
+            const response = await fetch('/users', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                const users = await response.json();
+                const userList = document.getElementById('userList');
+                users.forEach(user => {
+                    const li = document.createElement('li');
+                    li.textContent = `${user.name} (${user.email})`;
+                    userList.appendChild(li);
+                });
+            } else {
+                console.error('Erreur lors de la récupération des utilisateurs');
+            }
+        }
+
+        fetchUsers();
+    </script>
+</body>
+</html>

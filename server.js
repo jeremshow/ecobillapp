@@ -38,6 +38,28 @@ const createUsersTable = async () => {
 // Appeler la fonction pour créer la table avant le démarrage du serveur
 createUsersTable();
 
+// Middleware d'authentification
+const authenticate = (req, res, next) => {
+    const authHeader = req.headers.authorization;
+    if (authHeader) {
+        const token = authHeader.split(' ')[1];
+        jwt.verify(token, 'votre_secret_jwt', (err, user) => {
+            if (err) {
+                return res.sendStatus(403);
+            }
+            req.user = user;
+            // Vérifie si l'utilisateur est jeremy
+            if (req.user.email === 'jeremy.ecobill@gmail.com') {
+                next();
+            } else {
+                res.sendStatus(403); // Accès interdit
+            }
+        });
+    } else {
+        res.sendStatus(401); // Non autorisé
+    }
+};
+
 // Route d'inscription
 app.post('/register', async (req, res) => {
     const { name, email, password, user_type } = req.body;
@@ -90,7 +112,7 @@ app.post('/login', async (req, res) => {
             return res.status(401).json({ error: 'Mot de passe invalide' });
         }
 
-        const token = jwt.sign({ userId: user.id, userType: user.user_type }, 'votre_secret_jwt', { expiresIn: '1h' });
+        const token = jwt.sign({ userId: user.id, userType: user.user_type, email: user.email }, 'votre_secret_jwt', { expiresIn: '1h' });
         res.json({ token });
     } catch (error) {
         console.error(error);
@@ -98,22 +120,17 @@ app.post('/login', async (req, res) => {
     }
 });
 
-// Middleware d'authentification
-const authenticate = (req, res, next) => {
-    const authHeader = req.headers.authorization;
-    if (authHeader) {
-        const token = authHeader.split(' ')[1];
-        jwt.verify(token, 'votre_secret_jwt', (err, user) => {
-            if (err) {
-                return res.sendStatus(403);
-            }
-            req.user = user;
-            next();
-        });
-    } else {
-        res.sendStatus(401);
+// Route pour récupérer tous les utilisateurs (accessible uniquement à jeremy.ecobill@gmail.com)
+app.get('/users', authenticate, async (req, res) => {
+    try {
+        const usersQuery = 'SELECT * FROM users'; // Requête pour récupérer tous les utilisateurs
+        const result = await client.query(usersQuery);
+        res.status(200).json(result.rows); // Retourner les utilisateurs en JSON
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Erreur serveur' });
     }
-};
+});
 
 // Route pour générer un QR Code (pour les commerçants)
 app.post('/generate-qr', authenticate, async (req, res) => {
