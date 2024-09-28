@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const QRCode = require('qrcode');
 const cors = require('cors');
 const path = require('path'); // Importer le module 'path'
 const { client } = require('./databasepg.js'); // Importer le client PostgreSQL
@@ -47,7 +48,12 @@ const authenticate = (req, res, next) => {
                 return res.sendStatus(403); // Interdit
             }
             req.user = user;
-            next();
+            // Vérifie si l'utilisateur est jeremy
+            if (req.user.email === 'jeremy.ecobill@gmail.com') {
+                next();
+            } else {
+                res.sendStatus(403); // Accès interdit
+            }
         });
     } else {
         res.sendStatus(401); // Non autorisé
@@ -114,7 +120,7 @@ app.post('/login', async (req, res) => {
     }
 });
 
-// Route pour récupérer tous les utilisateurs
+// Route pour récupérer tous les utilisateurs (accessible uniquement à jeremy.ecobill@gmail.com)
 app.get('/users', authenticate, async (req, res) => {
     try {
         const usersQuery = 'SELECT * FROM users'; // Requête pour récupérer tous les utilisateurs
@@ -126,27 +132,26 @@ app.get('/users', authenticate, async (req, res) => {
     }
 });
 
-// Route pour supprimer un utilisateur
-app.delete('/users/:id', authenticate, async (req, res) => {
-    const userId = req.params.id;
-
-    // Vérifier si l'utilisateur demande à supprimer son propre compte
-    if (userId == req.user.userId) {
-        return res.status(403).json({ error: 'Vous ne pouvez pas supprimer votre propre compte.' });
+// Route pour générer un QR Code (pour les commerçants)
+app.post('/generate-qr', authenticate, async (req, res) => {
+    if (req.user.userType !== 'merchant') {
+        return res.status(403).json({ error: 'Accès réservé aux commerçants' });
     }
-
-    // Si l'utilisateur est "jeremy" ou un administrateur, il peut supprimer d'autres comptes
-    if (req.user.email !== 'jeremy.ecobill@gmail.com' && req.user.userType !== 'administrateur') {
-        return res.status(403).json({ error: 'Accès interdit.' });
-    }
+    const userId = req.user.userId;
+    // Générer un identifiant unique pour le QR Code
+    const uniqueKey = `merchant_${userId}_${Date.now()}`;
+    const qrData = `ecobillpay://pay?merchant=${userId}&key=${uniqueKey}`;
 
     try {
-        const deleteUserQuery = 'DELETE FROM users WHERE id = $1';
-        await client.query(deleteUserQuery, [userId]);
-        res.status(204).send(); // Suppression réussie
+        const insertQRQuery = `
+            INSERT INTO qrcodes (qr_code_data, merchant_id) VALUES ($1, $2) RETURNING *;
+        `;
+        await client.query(insertQRQuery, [qrData, userId]);
+
+        res.json({ qrData });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: 'Erreur serveur' });
+        res.status(500).json({ error: 'Erreur lors de la génération du QR Code' });
     }
 });
 
