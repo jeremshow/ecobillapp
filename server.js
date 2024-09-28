@@ -16,6 +16,28 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // Servir les fichiers statiques (HTML, CSS, JS)
 app.use(express.static(path.join(__dirname, 'public'))); // Assurez-vous que votre index.html est dans le dossier 'public'
 
+// Fonction pour créer la table "users" si elle n'existe pas déjà
+const createUsersTable = async () => {
+    const createTableQuery = `
+    CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(100),
+        email VARCHAR(100) UNIQUE NOT NULL,
+        password_hash VARCHAR(255) NOT NULL,
+        user_type VARCHAR(50) NOT NULL
+    );
+    `;
+    try {
+        await client.query(createTableQuery);
+        console.log('Table "users" vérifiée ou créée avec succès');
+    } catch (error) {
+        console.error('Erreur lors de la création de la table "users":', error);
+    }
+};
+
+// Appeler la fonction pour créer la table avant le démarrage du serveur
+createUsersTable();
+
 // Route d'inscription
 app.post('/register', async (req, res) => {
     const { name, email, password, user_type } = req.body;
