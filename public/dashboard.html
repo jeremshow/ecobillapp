@@ -5,6 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tableau de Bord - Ecobill Pay</title>
     <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Ajout de styles pour l'encadré des utilisateurs */
+        .user-container {
+            background-color: white;
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            margin: 20px auto; /* Centré horizontalement */
+        }
+        .user-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .user-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .user-list button {
+            margin-left: 10px;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -19,6 +45,14 @@
             <h2>Générer un QR Code</h2>
             <button id="generate-qr">Générer QR Code</button>
             <div id="qr-code"></div>
+        </section>
+        <section>
+            <h2>Utilisateurs</h2>
+            <div class="user-container">
+                <ul id="usersList" class="user-list">
+                    <!-- Les utilisateurs seront ajoutés ici -->
+                </ul>
+            </div>
         </section>
         <section>
             <h2>Transactions Récentes</h2>
@@ -37,84 +71,25 @@
                 </tbody>
             </table>
         </section>
-        <section>
-            <h2>Liste des Utilisateurs</h2>
-            <ul id="usersList"></ul>
-        </section>
-        <section>
-            <h2>Créer un Compte</h2>
-            <form id="createAccountForm">
-                <input type="text" id="name" placeholder="Nom" required>
-                <input type="email" id="email" placeholder="Email" required>
-                <input type="password" id="password" placeholder="Mot de passe" required>
-                <select id="userType">
-                    <option value="merchant">Commerçant</option>
-                    <option value="client">Client</option>
-                </select>
-                <button type="submit">Créer Compte</button>
-            </form>
-        </section>
     </main>
     <footer>
         <p>&copy; 2024 Ecobill Pay</p>
     </footer>
 
+    <!-- Bibliothèque QRCode.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script>
-        document.getElementById('logout').addEventListener('click', () => {
-            localStorage.removeItem('token');
-            window.location.href = 'login.html';
-        });
+        // ... (le reste de votre script existant)
 
-        document.getElementById('generate-qr').addEventListener('click', async () => {
+        async function fetchUsers() {
             const token = localStorage.getItem('token');
-            const response = await fetch('/generate-qr', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-            });
-            const data = await response.json();
-            if (data.qrData) {
-                document.getElementById('qr-code').innerHTML = '';
-                new QRCode(document.getElementById('qr-code'), data.qrData);
-            } else {
-                alert(data.error);
-            }
-        });
 
-        document.getElementById('createAccountForm').addEventListener('submit', async (event) => {
-            event.preventDefault(); // Empêche le rechargement de la page
-            const token = localStorage.getItem('token');
-            const name = document.getElementById('name').value;
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const userType = document.getElementById('userType').value;
-
-            const response = await fetch('/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-                body: JSON.stringify({ name, email, password, user_type: userType }),
-            });
-
-            const data = await response.json();
-            alert(data.message || data.error); // Afficher un message de succès ou d'erreur
-            loadUsers(); // Recharge la liste des utilisateurs après la création
-        });
-
-        // Fonction pour charger les utilisateurs
-        async function loadUsers() {
-            const token = localStorage.getItem('token');
             const response = await fetch('/users', {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
+                    'Content-Type': 'application/json'
+                }
             });
 
             if (response.ok) {
@@ -125,40 +100,49 @@
                 users.forEach(user => {
                     const li = document.createElement('li');
                     li.textContent = `${user.name} (${user.email})`;
+                    const editButton = document.createElement('button');
+                    editButton.textContent = 'Modifier';
+                    editButton.onclick = () => editUser(user.id); // Appel à la fonction d'édition
+                    const deleteButton = document.createElement('button');
+                    deleteButton.textContent = 'Supprimer';
+                    deleteButton.onclick = () => deleteUser(user.id); // Appel à la fonction de suppression
+                    li.appendChild(editButton);
+                    li.appendChild(deleteButton);
                     usersList.appendChild(li);
                 });
             } else {
                 console.error('Erreur lors de la récupération des utilisateurs:', response.statusText);
+                if (response.status === 403) {
+                    alert('Accès interdit. Veuillez vous connecter.');
+                    window.location.href = 'login.html';
+                }
             }
         }
 
-        // Fonction pour charger les transactions
-        async function loadTransactions() {
+        async function deleteUser(userId) {
             const token = localStorage.getItem('token');
-            const response = await fetch('/transactions', {
+            const response = await fetch(`/users/${userId}`, {
+                method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`,
-                },
+                }
             });
-            const data = await response.json();
-            const transactions = document.getElementById('transactions');
-            transactions.innerHTML = ''; // Vider les transactions précédentes
-            data.transactions.forEach(tx => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${tx.id}</td>
-                    <td>${tx.clientName}</td>
-                    <td>${tx.amount}</td>
-                    <td>${tx.date}</td>
-                    <td>${tx.status}</td>
-                `;
-                transactions.appendChild(row);
-            });
+
+            if (response.ok) {
+                alert('Utilisateur supprimé avec succès');
+                fetchUsers(); // Recharger la liste des utilisateurs
+            } else {
+                console.error('Erreur lors de la suppression de l’utilisateur:', response.statusText);
+            }
         }
 
-        // Charger les utilisateurs et les transactions au chargement de la page
-        loadUsers();
+        function editUser(userId) {
+            // Logique pour éditer un utilisateur (par exemple, afficher un formulaire pour modifier les détails)
+            alert(`Modifier l'utilisateur avec l'ID: ${userId}`);
+        }
+
         loadTransactions();
+        fetchUsers(); // Charger les utilisateurs lors du chargement
     </script>
 </body>
 </html>
