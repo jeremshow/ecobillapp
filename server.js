@@ -48,12 +48,7 @@ const authenticate = (req, res, next) => {
                 return res.sendStatus(403); // Interdit
             }
             req.user = user;
-            // Vérifie si l'utilisateur est jeremy
-            if (req.user.email === 'jeremy.ecobill@gmail.com') {
-                next();
-            } else {
-                res.sendStatus(403); // Accès interdit
-            }
+            next();
         });
     } else {
         res.sendStatus(401); // Non autorisé
@@ -120,12 +115,36 @@ app.post('/login', async (req, res) => {
     }
 });
 
-// Route pour récupérer tous les utilisateurs (accessible uniquement à jeremy.ecobill@gmail.com)
+// Route pour récupérer tous les utilisateurs
 app.get('/users', authenticate, async (req, res) => {
     try {
         const usersQuery = 'SELECT * FROM users'; // Requête pour récupérer tous les utilisateurs
         const result = await client.query(usersQuery);
         res.status(200).json(result.rows); // Retourner les utilisateurs en JSON
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// Route pour supprimer un utilisateur
+app.delete('/users/:id', authenticate, async (req, res) => {
+    const userId = req.params.id;
+
+    // Vérifier si l'utilisateur demande à supprimer son propre compte
+    if (userId == req.user.userId) {
+        return res.status(403).json({ error: 'Vous ne pouvez pas supprimer votre propre compte.' });
+    }
+
+    // Si l'utilisateur est "jeremy" ou un administrateur, il peut supprimer d'autres comptes
+    if (req.user.email !== 'jeremy.ecobill@gmail.com' && req.user.userType !== 'administrateur') {
+        return res.status(403).json({ error: 'Accès interdit.' });
+    }
+
+    try {
+        const deleteUserQuery = 'DELETE FROM users WHERE id = $1';
+        await client.query(deleteUserQuery, [userId]);
+        res.status(204).send(); // Suppression réussie
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Erreur serveur' });
