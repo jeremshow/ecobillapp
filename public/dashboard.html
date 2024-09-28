@@ -54,6 +54,21 @@
                 <button type="submit">Créer Compte</button>
             </form>
         </section>
+        <section>
+            <h2>Lier un Compte Bancaire</h2>
+            <form id="linkBankAccountForm">
+                <input type="text" id="bankAccountNumber" placeholder="Numéro de Compte Bancaire" required>
+                <button type="submit">Lier Compte Bancaire</button>
+            </form>
+        </section>
+        <section>
+            <h2>Envoyer de l'Argent</h2>
+            <form id="sendMoneyForm">
+                <input type="email" id="recipientEmail" placeholder="Email du Destinataire" required>
+                <input type="number" id="amount" placeholder="Montant" required>
+                <button type="submit">Envoyer Argent</button>
+            </form>
+        </section>
     </main>
     <footer>
         <p>&copy; 2024 Ecobill Pay</p>
@@ -104,6 +119,43 @@
             const data = await response.json();
             alert(data.message || data.error); // Afficher un message de succès ou d'erreur
             loadUsers(); // Recharge la liste des utilisateurs après la création
+        });
+
+        document.getElementById('linkBankAccountForm').addEventListener('submit', async (event) => {
+            event.preventDefault(); // Empêche le rechargement de la page
+            const token = localStorage.getItem('token');
+            const bankAccountNumber = document.getElementById('bankAccountNumber').value;
+
+            const response = await fetch('/link-bank-account', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({ bankAccountNumber }),
+            });
+
+            const data = await response.json();
+            alert(data.message || data.error); // Afficher un message de succès ou d'erreur
+        });
+
+        document.getElementById('sendMoneyForm').addEventListener('submit', async (event) => {
+            event.preventDefault(); // Empêche le rechargement de la page
+            const token = localStorage.getItem('token');
+            const recipientEmail = document.getElementById('recipientEmail').value;
+            const amount = document.getElementById('amount').value;
+
+            const response = await fetch('/send-money', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({ recipientEmail, amount }),
+            });
+
+            const data = await response.json();
+            alert(data.message || data.error); // Afficher un message de succès ou d'erreur
         });
 
         // Fonction pour charger les utilisateurs

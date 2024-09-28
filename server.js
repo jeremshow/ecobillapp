@@ -155,6 +155,64 @@ app.post('/generate-qr', authenticate, async (req, res) => {
     }
 });
 
+// Route pour lier un compte bancaire (pour les commerçants)
+app.post('/link-bank-account', authenticate, async (req, res) => {
+    if (req.user.userType !== 'merchant') {
+        return res.status(403).json({ error: 'Accès réservé aux commerçants' });
+    }
+
+    const { bankAccountNumber } = req.body; // Récupérer le numéro de compte bancaire
+
+    if (!bankAccountNumber) {
+        return res.status(400).json({ error: 'Le numéro de compte bancaire est requis' });
+    }
+
+    // Ici, vous pouvez ajouter la logique pour lier le compte bancaire dans votre base de données
+    // Par exemple, insérer le compte bancaire dans une table associée
+
+    try {
+        const insertBankAccountQuery = `
+            INSERT INTO bank_accounts (merchant_id, bank_account_number)
+            VALUES ($1, $2) RETURNING *;
+        `;
+        await client.query(insertBankAccountQuery, [req.user.userId, bankAccountNumber]);
+        
+        res.status(201).json({ message: 'Compte bancaire lié avec succès' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Erreur lors de la liaison du compte bancaire' });
+    }
+});
+
+// Route pour envoyer de l'argent (pour les clients)
+app.post('/send-money', authenticate, async (req, res) => {
+    if (req.user.userType !== 'client') {
+        return res.status(403).json({ error: 'Accès réservé aux clients' });
+    }
+
+    const { amount, recipientEmail } = req.body; // Montant à envoyer et email du destinataire
+
+    if (!amount || !recipientEmail) {
+        return res.status(400).json({ error: 'Montant et email du destinataire sont requis' });
+    }
+
+    // Ici, vous pouvez ajouter la logique pour effectuer la transaction
+    // Par exemple, vérifier que le destinataire existe, déduire le montant du compte du client, etc.
+
+    try {
+        const transactionQuery = `
+            INSERT INTO transactions (sender_id, recipient_email, amount, date)
+            VALUES ($1, $2, $3, NOW()) RETURNING *;
+        `;
+        await client.query(transactionQuery, [req.user.userId, recipientEmail, amount]);
+
+        res.status(201).json({ message: 'Transfert d\'argent effectué avec succès' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Erreur lors de l\'envoi d\'argent' });
+    }
+});
+
 // Démarrer le serveur
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
