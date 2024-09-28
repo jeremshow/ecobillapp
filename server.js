@@ -135,7 +135,9 @@ app.post('/login', async (req, res) => {
         }
 
         const token = jwt.sign({ userId: user.id, userType: user.user_type, email: user.email }, 'votre_secret_jwt', { expiresIn: '1h' });
-        res.json({ token });
+        
+        // Renvoie le token et le type d'utilisateur
+        res.json({ token, userType: user.user_type });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Erreur serveur' });
@@ -143,7 +145,7 @@ app.post('/login', async (req, res) => {
 });
 
 // Middleware pour rediriger vers le bon tableau de bord
-app.get('/dashboard.html', authenticate, (req, res) => {
+app.get('/dashboard', authenticate, (req, res) => {
     const userType = req.user.userType;
     if (userType === 'admin') {
         res.sendFile(path.join(__dirname, 'public', 'dashboard_admin.html')); // Chemin vers dashboard_admin.html
@@ -233,20 +235,20 @@ app.post('/send-money', authenticate, async (req, res) => {
 
     try {
         const transactionQuery = `
-            INSERT INTO transactions (sender_id, recipient_email, amount, date)
-            VALUES ($1, $2, $3, NOW()) RETURNING *;
+            INSERT INTO transactions (sender_id, recipient_email, amount)
+            VALUES ($1, $2, $3) RETURNING *;
         `;
-        await client.query(transactionQuery, [req.user.userId, recipientEmail, amount]);
-
-        res.status(201).json({ message: 'Transfert d\'argent effectué avec succès' });
+        const result = await client.query(transactionQuery, [req.user.userId, recipientEmail, amount]);
+        
+        res.status(201).json({ message: 'Transaction effectuée avec succès', transaction: result.rows[0] });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: 'Erreur lors de l\'envoi d\'argent' });
+        res.status(500).json({ error: 'Erreur lors de la transaction' });
     }
 });
 
 // Démarrer le serveur
-const PORT = process.env.PORT || 10000;
+const PORT = process.env.PORT || 5452;
 app.listen(PORT, () => {
-    console.log(`Serveur démarré sur le port ${PORT}`);
+    console.log(`Serveur en écoute sur le port ${PORT}`);
 });
