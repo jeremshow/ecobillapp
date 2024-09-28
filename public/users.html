@@ -1,6 +1,13 @@
 <script>
+    // Vérifie si le token existe
+    if (!localStorage.getItem('token')) {
+        alert('Vous devez être connecté pour accéder à cette page.');
+        window.location.href = 'login.html'; // Redirige vers la page de connexion
+    }
+
     async function fetchUsers() {
-        const token = localStorage.getItem('token'); // Récupérer le token d'authentification à partir du localStorage
+        const token = 'ayJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjMsInVzZXJUeXBlIjoibWVyY2hhbnQiLCJlbWFpbCI6ImplcmVteS5lY29iaWxsQGdtYWlsLmNvbSIsImlhdCI6MTcyNzU0ODQ0MCwiZXhwIjoxNzI3NTUyMDQwfQ.nJAVA6_VpXfVesAHm2JS8hzHBjwicVha-sTAZ5LLOAo'; // Utiliser le token fourni
+
         const response = await fetch('/users', {
             method: 'GET',
             headers: {
