@@ -43,7 +43,7 @@ const authenticate = (req, res, next) => {
     const authHeader = req.headers.authorization;
     if (authHeader) {
         const token = authHeader.split(' ')[1];
-        jwt.verify(token, 'votre_secret_jwt', (err, user) => {
+        jwt.verify(token, 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjMsInVzZXJUeXBlIjoibWVyY2hhbnQiLCJlbWFpbCI6ImplcmVteS5lY29iaWxsQGdtYWlsLmNvbSIsImlhdCI6MTcyNzU1MDcwNCwiZXhwIjoxNzI3NTU0MzA0fQ.rBuSBZ9eFdpLvT5oBemQLlJEVFIoPjUaCsM5H9zhL8Y', (err, user) => {
             if (err) {
                 return res.sendStatus(403); // Interdit
             }

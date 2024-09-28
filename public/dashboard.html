@@ -54,32 +54,35 @@
                 </ul>
             </div>
         </section>
-        <section>
-            <h2>Transactions Récentes</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Client</th>
-                        <th>Montant</th>
-                        <th>Date</th>
-                        <th>Statut</th>
-                    </tr>
-                </thead>
-                <tbody id="transactions">
-                    <!-- Transactions seront ajoutées ici -->
-                </tbody>
-            </table>
-        </section>
     </main>
-    <footer>
-        <p>&copy; 2024 Ecobill Pay</p>
-    </footer>
-
-    <!-- Bibliothèque QRCode.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script>
-        // ... (le reste de votre script existant)
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchUsers();
+
+            // Gérer la déconnexion
+            document.getElementById('logout').addEventListener('click', () => {
+                localStorage.removeItem('token');
+                window.location.href = 'login.html';
+            });
+
+            // Gérer la génération du QR Code
+            document.getElementById('generate-qr').addEventListener('click', async () => {
+                const token = localStorage.getItem('token');
+                const response = await fetch('/generate-qr', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('qr-code').innerHTML = `<img src="${data.qrData}" alt="QR Code" />`;
+                } else {
+                    console.error('Erreur lors de la génération du QR Code:', response.statusText);
+                }
+            });
+        });
 
         async function fetchUsers() {
             const token = localStorage.getItem('token');
@@ -119,30 +122,30 @@
             }
         }
 
+        // Fonction d'édition d'un utilisateur
+        function editUser(userId) {
+            alert(`Modifier l'utilisateur avec l'ID: ${userId}`);
+            // Implémenter la logique d'édition ici
+        }
+
+        // Fonction de suppression d'un utilisateur
         async function deleteUser(userId) {
             const token = localStorage.getItem('token');
             const response = await fetch(`/users/${userId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
                 }
             });
 
             if (response.ok) {
                 alert('Utilisateur supprimé avec succès');
-                fetchUsers(); // Recharger la liste des utilisateurs
+                fetchUsers(); // Rafraîchir la liste des utilisateurs
             } else {
-                console.error('Erreur lors de la suppression de l’utilisateur:', response.statusText);
+                console.error('Erreur lors de la suppression de l\'utilisateur:', response.statusText);
             }
         }
-
-        function editUser(userId) {
-            // Logique pour éditer un utilisateur (par exemple, afficher un formulaire pour modifier les détails)
-            alert(`Modifier l'utilisateur avec l'ID: ${userId}`);
-        }
-
-        loadTransactions();
-        fetchUsers(); // Charger les utilisateurs lors du chargement
     </script>
 </body>
 </html>
