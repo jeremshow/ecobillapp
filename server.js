@@ -45,7 +45,7 @@ const authenticate = (req, res, next) => {
         const token = authHeader.split(' ')[1];
         jwt.verify(token, 'votre_secret_jwt', (err, user) => {
             if (err) {
-                return res.sendStatus(403);
+                return res.sendStatus(403); // Interdit
             }
             req.user = user;
             // Vérifie si l'utilisateur est jeremy
@@ -146,7 +146,7 @@ app.post('/generate-qr', authenticate, async (req, res) => {
         const insertQRQuery = `
             INSERT INTO qrcodes (qr_code_data, merchant_id) VALUES ($1, $2) RETURNING *;
         `;
-        const qrCode = await client.query(insertQRQuery, [qrData, userId]);
+        await client.query(insertQRQuery, [qrData, userId]);
 
         res.json({ qrData });
     } catch (error) {
