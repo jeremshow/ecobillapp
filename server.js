@@ -4,21 +4,21 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const QRCode = require('qrcode');
 const cors = require('cors');
-const path = require('path'); // Importer le module 'path'
+const path = require('path');
 const { client } = require('./databasepg.js'); // Importer le client PostgreSQL
 
-const app = express(); // Initialisation de l'application Express
+const app = express();
 
-app.use(cors()); // Autoriser les requêtes depuis le frontend
+app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // Servir les fichiers statiques (HTML, CSS, JS)
-app.use(express.static(path.join(__dirname, 'public'))); // Assurez-vous que votre index.html est dans le dossier 'public'
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Fonction pour créer la table "users" si elle n'existe pas déjà
-const createUsersTable = async () => {
-    const createTableQuery = `
+// Fonction pour créer les tables nécessaires
+const createTables = async () => {
+    const createUsersTableQuery = `
     CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
         name VARCHAR(100),
@@ -27,16 +27,46 @@ const createUsersTable = async () => {
         user_type VARCHAR(50) NOT NULL
     );
     `;
+
+    const createQRCodesTableQuery = `
+    CREATE TABLE IF NOT EXISTS qrcodes (
+        id SERIAL PRIMARY KEY,
+        qr_code_data TEXT NOT NULL,
+        merchant_id INTEGER REFERENCES users(id) ON DELETE CASCADE
+    );
+    `;
+
+    const createBankAccountsTableQuery = `
+    CREATE TABLE IF NOT EXISTS bank_accounts (
+        id SERIAL PRIMARY KEY,
+        merchant_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        bank_account_number VARCHAR(100) NOT NULL
+    );
+    `;
+
+    const createTransactionsTableQuery = `
+    CREATE TABLE IF NOT EXISTS transactions (
+        id SERIAL PRIMARY KEY,
+        sender_id INTEGER REFERENCES users(id),
+        recipient_email VARCHAR(100) NOT NULL,
+        amount DECIMAL NOT NULL,
+        date TIMESTAMP DEFAULT NOW()
+    );
+    `;
+
     try {
-        await client.query(createTableQuery);
-        console.log('Table "users" vérifiée ou créée avec succès');
+        await client.query(createUsersTableQuery);
+        await client.query(createQRCodesTableQuery);
+        await client.query(createBankAccountsTableQuery);
+        await client.query(createTransactionsTableQuery);
+        console.log('Tables créées ou vérifiées avec succès');
     } catch (error) {
-        console.error('Erreur lors de la création de la table "users":', error);
+        console.error('Erreur lors de la création des tables:', error);
     }
 };
 
-// Appeler la fonction pour créer la table avant le démarrage du serveur
-createUsersTable();
+// Appeler la fonction pour créer les tables avant le démarrage du serveur
+createTables();
 
 // Middleware d'authentification
 const authenticate = (req, res, next) => {
@@ -48,12 +78,7 @@ const authenticate = (req, res, next) => {
                 return res.sendStatus(403); // Interdit
             }
             req.user = user;
-            // Vérifie si l'utilisateur est jeremy
-            if (req.user.email === 'jeremy.ecobill@gmail.com') {
-                next();
-            } else {
-                res.sendStatus(403); // Accès interdit
-            }
+            next();
         });
     } else {
         res.sendStatus(401); // Non autorisé
@@ -67,7 +92,6 @@ app.post('/register', async (req, res) => {
         return res.status(400).json({ error: 'Tous les champs sont requis' });
     }
     try {
-        // Vérifier si l'utilisateur existe déjà
         const checkUserQuery = 'SELECT * FROM users WHERE email = $1';
         const existingUser = await client.query(checkUserQuery, [email]);
 
@@ -75,7 +99,6 @@ app.post('/register', async (req, res) => {
             return res.status(400).json({ error: 'Email déjà utilisé' });
         }
 
-        // Hacher le mot de passe et créer l'utilisateur
         const hashedPassword = await bcrypt.hash(password, 10);
         const insertUserQuery = `
             INSERT INTO users (name, email, password_hash, user_type)
@@ -97,7 +120,6 @@ app.post('/login', async (req, res) => {
         return res.status(400).json({ error: 'Tous les champs sont requis' });
     }
     try {
-        // Rechercher l'utilisateur par email
         const findUserQuery = 'SELECT * FROM users WHERE email = $1';
         const result = await client.query(findUserQuery, [email]);
 
@@ -120,12 +142,15 @@ app.post('/login', async (req, res) => {
     }
 });
 
-// Route pour récupérer tous les utilisateurs (accessible uniquement à jeremy.ecobill@gmail.com)
+// Route pour récupérer les utilisateurs (pour les administrateurs)
 app.get('/users', authenticate, async (req, res) => {
+    if (req.user.userType !== 'admin' && req.user.email !== 'jeremy.ecobill@gmail.com') {
+        return res.status(403).json({ error: 'Accès interdit' });
+    }
     try {
-        const usersQuery = 'SELECT * FROM users'; // Requête pour récupérer tous les utilisateurs
+        const usersQuery = 'SELECT * FROM users';
         const result = await client.query(usersQuery);
-        res.status(200).json(result.rows); // Retourner les utilisateurs en JSON
+        res.status(200).json(result.rows);
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Erreur serveur' });
@@ -138,7 +163,6 @@ app.post('/generate-qr', authenticate, async (req, res) => {
         return res.status(403).json({ error: 'Accès réservé aux commerçants' });
     }
     const userId = req.user.userId;
-    // Générer un identifiant unique pour le QR Code
     const uniqueKey = `merchant_${userId}_${Date.now()}`;
     const qrData = `ecobillpay://pay?merchant=${userId}&key=${uniqueKey}`;
 
@@ -161,14 +185,11 @@ app.post('/link-bank-account', authenticate, async (req, res) => {
         return res.status(403).json({ error: 'Accès réservé aux commerçants' });
     }
 
-    const { bankAccountNumber } = req.body; // Récupérer le numéro de compte bancaire
+    const { bankAccountNumber } = req.body;
 
     if (!bankAccountNumber) {
         return res.status(400).json({ error: 'Le numéro de compte bancaire est requis' });
     }
-
-    // Ici, vous pouvez ajouter la logique pour lier le compte bancaire dans votre base de données
-    // Par exemple, insérer le compte bancaire dans une table associée
 
     try {
         const insertBankAccountQuery = `
@@ -190,14 +211,11 @@ app.post('/send-money', authenticate, async (req, res) => {
         return res.status(403).json({ error: 'Accès réservé aux clients' });
     }
 
-    const { amount, recipientEmail } = req.body; // Montant à envoyer et email du destinataire
+    const { amount, recipientEmail } = req.body;
 
     if (!amount || !recipientEmail) {
         return res.status(400).json({ error: 'Montant et email du destinataire sont requis' });
     }
-
-    // Ici, vous pouvez ajouter la logique pour effectuer la transaction
-    // Par exemple, vérifier que le destinataire existe, déduire le montant du compte du client, etc.
 
     try {
         const transactionQuery = `
