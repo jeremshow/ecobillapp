@@ -2,7 +2,6 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const QRCode = require('qrcode');
 const cors = require('cors');
 const path = require('path'); // Importer le module 'path'
 const { client } = require('./databasepg.js'); // Importer le client PostgreSQL
@@ -43,7 +42,7 @@ const authenticate = (req, res, next) => {
     const authHeader = req.headers.authorization;
     if (authHeader) {
         const token = authHeader.split(' ')[1];
-        jwt.verify(token, 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjMsInVzZXJUeXBlIjoibWVyY2hhbnQiLCJlbWFpbCI6ImplcmVteS5lY29iaWxsQGdtYWlsLmNvbSIsImlhdCI6MTcyNzU1MDcwNCwiZXhwIjoxNzI3NTU0MzA0fQ.rBuSBZ9eFdpLvT5oBemQLlJEVFIoPjUaCsM5H9zhL8Y', (err, user) => {
+        jwt.verify(token, 'votre_secret_jwt', (err, user) => {
             if (err) {
                 return res.sendStatus(403); // Interdit
             }
@@ -148,29 +147,6 @@ app.delete('/users/:id', authenticate, async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Erreur serveur' });
-    }
-});
-
-// Route pour générer un QR Code (pour les commerçants)
-app.post('/generate-qr', authenticate, async (req, res) => {
-    if (req.user.userType !== 'merchant') {
-        return res.status(403).json({ error: 'Accès réservé aux commerçants' });
-    }
-    const userId = req.user.userId;
-    // Générer un identifiant unique pour le QR Code
-    const uniqueKey = `merchant_${userId}_${Date.now()}`;
-    const qrData = `ecobillpay://pay?merchant=${userId}&key=${uniqueKey}`;
-
-    try {
-        const insertQRQuery = `
-            INSERT INTO qrcodes (qr_code_data, merchant_id) VALUES ($1, $2) RETURNING *;
-        `;
-        await client.query(insertQRQuery, [qrData, userId]);
-
-        res.json({ qrData });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Erreur lors de la génération du QR Code' });
     }
 });
 

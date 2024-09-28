@@ -54,98 +54,29 @@
                 </ul>
             </div>
         </section>
+        <section>
+            <h2>Transactions Récentes</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Client</th>
+                        <th>Montant</th>
+                        <th>Date</th>
+                        <th>Statut</th>
+                    </tr>
+                </thead>
+                <tbody id="transactions">
+                    <!-- Transactions seront ajoutées ici -->
+                </tbody>
+            </table>
+        </section>
     </main>
+    <footer>
+        <p>&copy; 2024 Ecobill Pay</p>
+    </footer>
+
+    <!-- Bibliothèque QRCode.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            fetchUsers();
-
-            // Gérer la déconnexion
-            document.getElementById('logout').addEventListener('click', () => {
-                localStorage.removeItem('token');
-                window.location.href = 'login.html';
-            });
-
-            // Gérer la génération du QR Code
-            document.getElementById('generate-qr').addEventListener('click', async () => {
-                const token = localStorage.getItem('token');
-                const response = await fetch('/generate-qr', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    document.getElementById('qr-code').innerHTML = `<img src="${data.qrData}" alt="QR Code" />`;
-                } else {
-                    console.error('Erreur lors de la génération du QR Code:', response.statusText);
-                }
-            });
-        });
-
-        async function fetchUsers() {
-            const token = localStorage.getItem('token');
-
-            const response = await fetch('/users', {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (response.ok) {
-                const users = await response.json();
-                const usersList = document.getElementById('usersList');
-                usersList.innerHTML = '';
-
-                users.forEach(user => {
-                    const li = document.createElement('li');
-                    li.textContent = `${user.name} (${user.email})`;
-                    const editButton = document.createElement('button');
-                    editButton.textContent = 'Modifier';
-                    editButton.onclick = () => editUser(user.id); // Appel à la fonction d'édition
-                    const deleteButton = document.createElement('button');
-                    deleteButton.textContent = 'Supprimer';
-                    deleteButton.onclick = () => deleteUser(user.id); // Appel à la fonction de suppression
-                    li.appendChild(editButton);
-                    li.appendChild(deleteButton);
-                    usersList.appendChild(li);
-                });
-            } else {
-                console.error('Erreur lors de la récupération des utilisateurs:', response.statusText);
-                if (response.status === 403) {
-                    alert('Accès interdit. Veuillez vous connecter.');
-                    window.location.href = 'login.html';
-                }
-            }
-        }
-
-        // Fonction d'édition d'un utilisateur
-        function editUser(userId) {
-            alert(`Modifier l'utilisateur avec l'ID: ${userId}`);
-            // Implémenter la logique d'édition ici
-        }
-
-        // Fonction de suppression d'un utilisateur
-        async function deleteUser(userId) {
-            const token = localStorage.getItem('token');
-            const response = await fetch(`/users/${userId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (response.ok) {
-                alert('Utilisateur supprimé avec succès');
-                fetchUsers(); // Rafraîchir la liste des utilisateurs
-            } else {
-                console.error('Erreur lors de la suppression de l\'utilisateur:', response.statusText);
-            }
-        }
-    </script>
-</body>
-</html>
+        async
