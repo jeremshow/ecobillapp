@@ -86,11 +86,18 @@ const authenticate = (req, res, next) => {
 };
 
 // Route d'inscription
-app.post('/register', async (req, res) => {
+app.post('/register', authenticate, async (req, res) => {
     const { name, email, password, user_type } = req.body;
+
+    // Vérifie si l'utilisateur est administrateur avant de créer un compte
+    if (req.user.userType !== 'admin') {
+        return res.status(403).json({ error: 'Accès réservé aux administrateurs' });
+    }
+
     if (!name || !email || !password || !user_type) {
         return res.status(400).json({ error: 'Tous les champs sont requis' });
     }
+
     try {
         const checkUserQuery = 'SELECT * FROM users WHERE email = $1';
         const existingUser = await client.query(checkUserQuery, [email]);
@@ -230,32 +237,25 @@ app.post('/send-money', authenticate, async (req, res) => {
     const { recipientEmail, amount } = req.body;
 
     if (!recipientEmail || !amount) {
-        return res.status(400).json({ error: 'Le destinataire et le montant sont requis' });
+        return res.status(400).json({ error: 'Tous les champs sont requis' });
     }
 
     try {
-        const findRecipientQuery = 'SELECT * FROM users WHERE email = $1';
-        const recipientResult = await client.query(findRecipientQuery, [recipientEmail]);
-
-        if (recipientResult.rows.length === 0) {
-            return res.status(404).json({ error: 'Destinataire non trouvé' });
-        }
-
-        const insertTransactionQuery = `
+        const transactionQuery = `
             INSERT INTO transactions (sender_id, recipient_email, amount)
             VALUES ($1, $2, $3) RETURNING *;
         `;
-        await client.query(insertTransactionQuery, [req.user.userId, recipientEmail, amount]);
+        await client.query(transactionQuery, [req.user.userId, recipientEmail, amount]);
 
-        res.status(201).json({ message: 'Transaction effectuée avec succès' });
+        res.status(201).json({ message: 'Transfert d\'argent effectué avec succès' });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: 'Erreur lors de la transaction' });
+        res.status(500).json({ error: 'Erreur lors de l\'envoi de l\'argent' });
     }
 });
 
 // Démarrer le serveur
-const port = process.env.PORT || 5452;
-app.listen(port, () => {
-    console.log(`Serveur démarré sur le port ${port}`);
+const PORT = 5452; // Remplacez par le port souhaité
+app.listen(PORT, () => {
+    console.log(`Serveur en cours d'exécution sur le port ${PORT}`);
 });
