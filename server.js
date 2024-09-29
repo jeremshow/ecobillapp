@@ -23,27 +23,24 @@ const pool = new Pool({
     port: process.env.DB_PORT || 5432,
 });
 
-// Middleware pour vérifier le token JWT
-function authenticateToken(req, res, next) {
-    const token = req.headers['authorization']?.split(' ')[1];
-    if (!token) return res.sendStatus(401);
-    
-    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-        if (err) return res.sendStatus(403);
-        req.user = user;
-        next();
-    });
-}
-
-// Middleware pour vérifier les droits d'accès en fonction des grades
-const checkAdminGrade = (requiredGrade) => {
+// Middleware pour vérifier le token JWT et les droits d'accès
+function authenticateToken(requiredGrade) {
     return (req, res, next) => {
-        if (req.user.grade > requiredGrade) {
-            return res.sendStatus(403); // Accès interdit
-        }
-        next();
+        const token = req.headers['authorization']?.split(' ')[1];
+        if (!token) return res.sendStatus(401);
+
+        jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+            if (err) return res.sendStatus(403);
+            req.user = user;
+
+            // Vérification des droits d'accès si un grade est requis
+            if (requiredGrade && req.user.grade > requiredGrade) {
+                return res.sendStatus(403); // Accès interdit
+            }
+            next();
+        });
     };
-};
+}
 
 // Route pour la racine
 app.get('/', (req, res) => {
@@ -60,7 +57,7 @@ app.get('/signup.html', (req, res) => {
 });
 
 // Routes pour les tableaux de bord
-app.get('/dashboard_admin.html', authenticateToken, (req, res) => {
+app.get('/dashboard_admin.html', authenticateToken(1), (req, res) => {
     if (req.user.usertype === 'admin') {
         res.sendFile(__dirname + '/dashboard_admin.html');
     } else {
@@ -68,7 +65,7 @@ app.get('/dashboard_admin.html', authenticateToken, (req, res) => {
     }
 });
 
-app.get('/dashboard_client.html', authenticateToken, (req, res) => {
+app.get('/dashboard_client.html', authenticateToken(2), (req, res) => {
     if (req.user.usertype === 'client') {
         res.sendFile(__dirname + '/dashboard_client.html');
     } else {
@@ -76,7 +73,7 @@ app.get('/dashboard_client.html', authenticateToken, (req, res) => {
     }
 });
 
-app.get('/dashboard_merchant.html', authenticateToken, (req, res) => {
+app.get('/dashboard_merchant.html', authenticateToken(3), (req, res) => {
     if (req.user.usertype === 'merchant') {
         res.sendFile(__dirname + '/dashboard_merchant.html');
     } else {
@@ -104,7 +101,7 @@ app.post('/login', async (req, res) => {
 });
 
 // Route pour créer un nouvel utilisateur
-app.post('/admin/create-user', authenticateToken, checkAdminGrade(1), async (req, res) => {
+app.post('/admin/create-user', authenticateToken(1), async (req, res) => {
     const { name, email, password, usertype } = req.body;
 
     if (!name || !email || !password || !usertype) {
@@ -149,7 +146,7 @@ app.post('/admin/create-user', authenticateToken, checkAdminGrade(1), async (req
 });
 
 // Route pour récupérer les utilisateurs (administrateur uniquement)
-app.get('/admin/users', authenticateToken, checkAdminGrade(1), async (req, res) => {
+app.get('/admin/users', authenticateToken(1), async (req, res) => {
     try {
         const result = await pool.query('SELECT id, name, email, usertype, grade FROM users'); // Inclure le grade dans la requête
         res.json(result.rows);
@@ -160,9 +157,7 @@ app.get('/admin/users', authenticateToken, checkAdminGrade(1), async (req, res) 
 });
 
 // Route pour créer un QR Code
-app.get('/admin/generate-qr/:merchantId', authenticateToken, async (req, res) => {
-    if (req.user.usertype !== 'admin') return res.sendStatus(403);
-
+app.get('/admin/generate-qr/:merchantId', authenticateToken(1), async (req, res) => {
     const { merchantId } = req.params;
     const qrData = `https://ecobillapp.onrender.com/payment?merchantId=${merchantId}`;
     try {
