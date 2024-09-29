@@ -22,6 +22,15 @@ const pool = new Pool({
     port: process.env.DB_PORT || 5432, // Utilise une variable d'environnement
 });
 
+// Test de connexion à la base de données
+pool.connect((err, client, release) => {
+    if (err) {
+        return console.error('Erreur de connexion à la base de données:', err.stack);
+    }
+    console.log('Connexion à la base de données réussie');
+    release();
+});
+
 // Middleware pour vérifier le token JWT
 function authenticateToken(req, res, next) {
     const token = req.headers['authorization']?.split(' ')[1];
@@ -33,17 +42,6 @@ function authenticateToken(req, res, next) {
         next();
     });
 }
-
-// Route de test de connexion à la base de données
-app.get('/test-db', async (req, res) => {
-    try {
-        const result = await pool.query('SELECT NOW()');
-        res.json({ message: "Connexion réussie à la base de données", time: result.rows[0].now });
-    } catch (err) {
-        console.error('Erreur de connexion à la base de données', err);
-        res.status(500).send('Erreur de connexion à la base de données');
-    }
-});
 
 // Route par défaut pour gérer la racine
 app.get('/', (req, res) => {
