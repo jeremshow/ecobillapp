@@ -221,26 +221,33 @@ app.post('/link-bank-account', authenticate, async (req, res) => {
     }
 });
 
-// Route pour envoyer de l'argent (pour les clients)
+// Route pour envoyer de l'argent
 app.post('/send-money', authenticate, async (req, res) => {
     if (req.user.userType !== 'client') {
         return res.status(403).json({ error: 'Accès réservé aux clients' });
     }
 
-    const { amount, recipientEmail } = req.body;
+    const { recipientEmail, amount } = req.body;
 
-    if (!amount || !recipientEmail) {
-        return res.status(400).json({ error: 'Montant et email du destinataire sont requis' });
+    if (!recipientEmail || !amount) {
+        return res.status(400).json({ error: 'Le destinataire et le montant sont requis' });
     }
 
     try {
-        const transactionQuery = `
+        const findRecipientQuery = 'SELECT * FROM users WHERE email = $1';
+        const recipientResult = await client.query(findRecipientQuery, [recipientEmail]);
+
+        if (recipientResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Destinataire non trouvé' });
+        }
+
+        const insertTransactionQuery = `
             INSERT INTO transactions (sender_id, recipient_email, amount)
             VALUES ($1, $2, $3) RETURNING *;
         `;
-        const result = await client.query(transactionQuery, [req.user.userId, recipientEmail, amount]);
-        
-        res.status(201).json({ message: 'Transaction effectuée avec succès', transaction: result.rows[0] });
+        await client.query(insertTransactionQuery, [req.user.userId, recipientEmail, amount]);
+
+        res.status(201).json({ message: 'Transaction effectuée avec succès' });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Erreur lors de la transaction' });
@@ -248,7 +255,7 @@ app.post('/send-money', authenticate, async (req, res) => {
 });
 
 // Démarrer le serveur
-const PORT = process.env.PORT || 5452;
-app.listen(PORT, () => {
-    console.log(`Serveur en écoute sur le port ${PORT}`);
+const port = process.env.PORT || 5452;
+app.listen(port, () => {
+    console.log(`Serveur démarré sur le port ${port}`);
 });
