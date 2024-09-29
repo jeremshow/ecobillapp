@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard Client</title>
+    <title>Tableau de Bord Client</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -27,6 +27,12 @@
         <p>&copy; 2024 Ecobill Pay</p>
     </footer>
     <script>
+        // Fonctionnalité de déconnexion
+        document.getElementById('logout').addEventListener('click', () => {
+            localStorage.removeItem('token');
+            window.location.href = 'login.html';
+        });
+
         // Script pour affilier la carte et scanner le QR Code
         document.getElementById('link-card').addEventListener('click', async () => {
             const token = localStorage.getItem('token');

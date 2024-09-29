@@ -2,8 +2,21 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard Commerçant</title>
+    <title>Tableau de Bord Commerçant</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-qrcode/1.0/jquery.qrcode.min.js"></script>
+    <style>
+        /* Ajouter quelques styles pour un meilleur visuel */
+        #qr-code {
+            margin-top: 10px;
+        }
+        #loading {
+            display: none;
+            font-size: 18px;
+            color: blue;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -18,6 +31,7 @@
             <h2>Générer un QR Code</h2>
             <button id="generate-qr">Générer QR Code</button>
             <div id="qr-code"></div>
+            <div id="loading">Chargement en cours...</div>
         </section>
         <section>
             <h2>Transactions Récentes</h2>
@@ -39,13 +53,16 @@
         <p>&copy; 2024 Ecobill Pay</p>
     </footer>
     <script>
+        // Fonctionnalité de déconnexion
         document.getElementById('logout').addEventListener('click', () => {
             localStorage.removeItem('token');
             window.location.href = 'login.html';
         });
 
+        // Générer le QR Code
         document.getElementById('generate-qr').addEventListener('click', async () => {
             const token = localStorage.getItem('token');
+            document.getElementById('loading').style.display = 'block'; // Afficher le message de chargement
             const response = await fetch('/generate-qr', {
                 method: 'POST',
                 headers: {
@@ -53,6 +70,8 @@
                 },
             });
             const data = await response.json();
+            document.getElementById('loading').style.display = 'none'; // Cacher le message de chargement
+
             if (data.qrData) {
                 document.getElementById('qr-code').innerHTML = '';
                 new QRCode(document.getElementById('qr-code'), data.qrData);
@@ -64,25 +83,33 @@
         // Charger les transactions
         async function loadTransactions() {
             const token = localStorage.getItem('token');
+            document.getElementById('loading').style.display = 'block'; // Afficher le message de chargement
             const response = await fetch('/merchant-transactions', {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                 },
             });
             const data = await response.json();
+            document.getElementById('loading').style.display = 'none'; // Cacher le message de chargement
+
             const transactions = document.getElementById('transactions');
             transactions.innerHTML = ''; // Vider les transactions précédentes
-            data.transactions.forEach(tx => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${tx.id}</td>
-                    <td>${tx.clientName}</td>
-                    <td>${tx.amount}</td>
-                    <td>${tx.date}</td>
-                    <td>${tx.status}</td>
-                `;
-                transactions.appendChild(row);
-            });
+
+            if (data.transactions) {
+                data.transactions.forEach(tx => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${tx.id}</td>
+                        <td>${tx.clientName}</td>
+                        <td>${tx.amount}</td>
+                        <td>${tx.date}</td>
+                        <td>${tx.status}</td>
+                    `;
+                    transactions.appendChild(row);
+                });
+            } else {
+                alert(data.error || "Aucune transaction disponible.");
+            }
         }
 
         loadTransactions();

@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     try {
-        const response = await fetch('https://ecobillapp.onrender.com/dashboard', { // Corriger l'URL pour récupérer le tableau de bord
+        const response = await fetch('https://ecobillapp.onrender.com/dashboard', {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}` // Envoie le token dans l'en-tête

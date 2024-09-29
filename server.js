@@ -5,7 +5,8 @@ const jwt = require('jsonwebtoken');
 const QRCode = require('qrcode');
 const cors = require('cors');
 const path = require('path');
-const { client } = require('./databasepg.js'); // Importer le client PostgreSQL
+const { Client } = require('pg'); // Assurez-vous d'avoir 'pg' installé
+const config = require('./config.js'); // Importer le fichier de configuration
 
 const app = express();
 
@@ -15,6 +16,14 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 // Servir les fichiers statiques (HTML, CSS, JS)
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Créer une instance du client PostgreSQL
+const client = new Client(config.db);
+
+// Connexion à la base de données
+client.connect()
+    .then(() => console.log('Connecté à la base de données PostgreSQL'))
+    .catch(err => console.error('Erreur de connexion à la base de données', err));
 
 // Fonction pour créer les tables nécessaires
 const createTables = async () => {
@@ -151,20 +160,6 @@ app.post('/login', async (req, res) => {
     }
 });
 
-// Middleware pour rediriger vers le bon tableau de bord
-app.get('/dashboard', authenticate, (req, res) => {
-    const userType = req.user.userType;
-    if (userType === 'admin') {
-        res.sendFile(path.join(__dirname, 'public', 'dashboard_admin.html')); // Chemin vers dashboard_admin.html
-    } else if (userType === 'client') {
-        res.sendFile(path.join(__dirname, 'public', 'dashboard_client.html')); // Chemin vers dashboard_client.html
-    } else if (userType === 'merchant') {
-        res.sendFile(path.join(__dirname, 'public', 'dashboard_merchand.html')); // Chemin vers dashboard_merchand.html
-    } else {
-        res.status(403).send('Accès interdit'); // Si le type d'utilisateur n'est pas reconnu
-    }
-});
-
 // Route pour récupérer les utilisateurs (pour les administrateurs)
 app.get('/users', authenticate, async (req, res) => {
     if (req.user.userType !== 'admin' && req.user.email !== 'jeremy.ecobill@gmail.com') {
@@ -237,7 +232,7 @@ app.post('/send-money', authenticate, async (req, res) => {
     const { recipientEmail, amount } = req.body;
 
     if (!recipientEmail || !amount) {
-        return res.status(400).json({ error: 'Email du destinataire et montant requis' });
+        return res.status(400).json({ error: 'Email du destinataire et montant sont requis' });
     }
 
     try {
@@ -247,22 +242,26 @@ app.post('/send-money', authenticate, async (req, res) => {
         `;
         await client.query(insertTransactionQuery, [req.user.userId, recipientEmail, amount]);
         
-        res.status(201).json({ message: 'Transfert d\'argent effectué avec succès' });
+        res.status(201).json({ message: 'Transaction effectuée avec succès' });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Erreur lors de l\'envoi d\'argent' });
     }
 });
 
-// Route pour récupérer les transactions
+// Route pour récupérer les transactions (pour les commerçants et administrateurs)
 app.get('/transactions', authenticate, async (req, res) => {
-    const userId = req.user.userId;
+    if (req.user.userType === 'client') {
+        return res.status(403).json({ error: 'Accès réservé aux commerçants et administrateurs' });
+    }
+
     try {
         const transactionsQuery = `
-            SELECT * FROM transactions 
-            WHERE sender_id = $1 OR recipient_email = $2;
+            SELECT * FROM transactions
+            WHERE sender_id = $1 OR recipient_email = $2
+            ORDER BY date DESC;
         `;
-        const result = await client.query(transactionsQuery, [userId, req.user.email]);
+        const result = await client.query(transactionsQuery, [req.user.userId, req.user.email]);
         res.status(200).json(result.rows);
     } catch (error) {
         console.error(error);
@@ -271,7 +270,7 @@ app.get('/transactions', authenticate, async (req, res) => {
 });
 
 // Démarrer le serveur
-const PORT = 5452; // Port du serveur
+const PORT = 5452;
 app.listen(PORT, () => {
-    console.log(`Serveur en écoute sur le port ${PORT}`);
+    console.log(`Serveur démarré sur le port ${PORT}`);
 });
