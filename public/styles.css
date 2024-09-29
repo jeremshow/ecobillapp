@@ -1,116 +1,75 @@
-/* Fonts and general styles */
-* {
+body {
+    font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    font-family: 'Poppins', sans-serif;
-    color: #333;
-    background-color: #f5f7fa;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-}
-
-h1, h2 {
-    color: #1f4e78;
-}
-
-h1 .highlight, p .highlight {
-    color: #ff9800;
+    background-color: #f4f4f4; /* Couleur de fond claire */
 }
 
 header {
-    background-color: #1f4e78;
-    color: #fff;
-    padding: 20px 0;
-}
-
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-nav a {
-    margin-left: 20px;
-    text-decoration: none;
-    color: #fff;
-    font-weight: 600;
-}
-
-.btn {
-    background-color: #ff9800;
-    padding: 10px 20px;
-    border-radius: 25px;
-    transition: background-color 0.3s ease;
-    font-weight: 600;
-}
-
-.btn:hover {
-    background-color: #ff781f;
-}
-
-.btn-secondary {
-    background-color: #4caf50;
-}
-
-.btn-secondary:hover {
-    background-color: #45a049;
-}
-
-/* Main content */
-main {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    background: #4CAF50;
+    color: white;
+    padding: 15px;
     text-align: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Ombre pour un effet d'élévation */
 }
 
-section {
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    margin: 20px;
+h1 {
+    margin: 0; /* Supprime la marge du h1 pour un alignement parfait */
+}
+
+main {
     padding: 20px;
-    width: 80%;
 }
 
-h2 {
-    margin-bottom: 15px;
-}
-
-input[type="text"], input[type="email"], input[type="password"], input[type="number"], select {
-    width: 100%;
+footer {
+    background: #333;
+    color: white;
+    text-align: center;
     padding: 10px;
-    margin: 10px 0;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
-
-input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus, input[type="number"]:focus, select:focus {
-    border-color: #1f4e78;
-    outline: none;
+    position: fixed; /* Fait en sorte que le footer reste en bas */
+    bottom: 0;
+    width: 100%; /* Occupe toute la largeur */
 }
 
 button {
+    padding: 10px;
+    color: white;
+    background: #f44336;
+    border: none;
     cursor: pointer;
+    border-radius: 5px; /* Coins arrondis pour un look moderne */
+    transition: background 0.3s; /* Animation de transition */
 }
 
-/* Footer */
-footer {
-    background-color: #1f4e78;
-    color: #fff;
-    text-align: center;
-    padding: 20px 0;
+button:hover {
+    background: #d32f2f; /* Couleur de fond du bouton au survol */
+    opacity: 0.8;
 }
 
-footer p .highlight {
-    color: #ff9800;
+input[type="text"],
+input[type="email"],
+input[type="password"],
+select {
+    width: 100%; /* Remplir la largeur du conteneur */
+    padding: 10px;
+    margin: 10px 0; /* Ajoute de l'espace entre les éléments */
+    border: 1px solid #ccc; /* Bordure standard */
+    border-radius: 5px; /* Coins arrondis */
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+select:focus {
+    border-color: #4CAF50; /* Bordure verte lors du focus */
+    outline: none; /* Supprime le contour par défaut */
+}
+
+.container {
+    max-width: 800px; /* Limite la largeur du conteneur principal */
+    margin: auto; /* Centrer le conteneur */
+    background: white; /* Fond blanc pour le conteneur */
+    padding: 20px; /* Espacement à l'intérieur du conteneur */
+    border-radius: 8px; /* Coins arrondis du conteneur */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Ombre douce pour le conteneur */
 }

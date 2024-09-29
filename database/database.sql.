@@ -1,0 +1,25 @@
+-- Création de la table des utilisateurs
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password VARCHAR(100) NOT NULL,
+    usertype VARCHAR(20) NOT NULL,  -- 'client', 'merchant', 'admin'
+    grade INTEGER NOT NULL DEFAULT 3  -- 1 pour admin (jeremy), 2 pour admin (alexandre), 3 pour futurs admins
+);
+
+-- Création de la table des transactions
+CREATE TABLE transactions (
+    transaction_id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),
+    amount NUMERIC,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Création de la table des QR Codes pour les commerçants
+CREATE TABLE qr_codes (
+    qr_id SERIAL PRIMARY KEY,
+    merchant_id INTEGER REFERENCES users(id),
+    qr_data TEXT NOT NULL, -- Les données QR (l'URL par exemple)
+    created_at TIMESTAMP DEFAULT NOW()
+);

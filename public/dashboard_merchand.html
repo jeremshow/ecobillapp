@@ -3,147 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tableau de Bord - Ecobill Pay</title>
+    <title>Tableau de Bord Commerçant - Ecobill Pay</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <header>
-        <h1>Tableau de Bord</h1>
-        <!-- Ajoute des éléments de navigation si nécessaire -->
+        <h1>Tableau de Bord Commerçant</h1>
+        <span id="merchantId"></span>
+        <button id="logoutBtn">Déconnexion</button>
     </header>
     <main>
-        <div id="dashboardContent">
-            <h2>Bienvenue, Commerçant ! Voici vos données.</h2>
-
-            <button id="generateQRCodeBtn">Générer QR Code</button>
-            <button id="linkBankAccountBtn">Lier Compte Bancaire</button>
-
-            <div id="transactions">
-                <h3>Transactions</h3>
-                <ul id="transactionList"></ul>
-            </div>
+        <div id="bankAccount">
+            <h2>Affilier votre compte bancaire</h2>
+            <form id="bankAccountForm">
+                <input type="text" id="bankAccountNumber" placeholder="Numéro de compte" required>
+                <button type="submit">Affilier</button>
+            </form>
         </div>
+        <div id="qrCode">
+            <h2>QR-Code</h2>
+            <button id="generateQRCodeBtn">Générer mon QR-Code</button>
+        </div>
+        <div id="transactionHistory"></div>
     </main>
     <footer>
         <p>&copy; 2024 Ecobill Pay</p>
     </footer>
 
-    <script src="dashboard.js"></script> <!-- Ajout du fichier dashboard.js -->
+    <script src="dashboard_merchand.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            fetchDashboard(); // Appel de la fonction pour récupérer les données
-            fetchTransactions(); // Appel pour récupérer les transactions
-
-            // Ajouter des événements aux boutons
-            document.getElementById('generateQRCodeBtn').addEventListener('click', generateQRCode);
-            document.getElementById('linkBankAccountBtn').addEventListener('click', linkBankAccount);
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('token');
+            window.location.href = 'login.html';
         });
-
-        async function fetchDashboard() {
-            try {
-                const response = await fetch('/dashboard', {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}` // Assurez-vous que le token est stocké dans le localStorage
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`Erreur lors de la récupération des données: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                // Manipulez le DOM ici pour afficher les données du tableau de bord
-                document.getElementById('dashboardContent').innerHTML = JSON.stringify(data);
-            } catch (error) {
-                console.error('Erreur:', error);
-                document.getElementById('dashboardContent').innerHTML = 'Erreur lors de la récupération des données du tableau de bord.';
-            }
-        }
-
-        const fetchTransactions = async () => {
-            const token = localStorage.getItem('token');
-            try {
-                const response = await fetch('https://ecobillapp.onrender.com/transactions', {
-                    method: 'GET',
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Erreur lors de la récupération des transactions');
-                }
-
-                const transactions = await response.json();
-                displayTransactions(transactions);
-            } catch (error) {
-                console.error('Erreur lors de la récupération des transactions:', error);
-            }
-        };
-
-        const displayTransactions = (transactions) => {
-            const transactionList = document.getElementById('transactionList');
-            transactionList.innerHTML = '';
-
-            transactions.forEach(transaction => {
-                const listItem = document.createElement('li');
-                listItem.textContent = `Montant: ${transaction.amount} | Destinataire: ${transaction.recipient_email} | Date: ${new Date(transaction.date).toLocaleString()}`;
-                transactionList.appendChild(listItem);
-            });
-        };
-
-        const generateQRCode = async () => {
-            const token = localStorage.getItem('token');
-            try {
-                const response = await fetch('https://ecobillapp.onrender.com/generate-qr', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${token}`
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Erreur lors de la génération du QR Code');
-                }
-
-                const data = await response.json();
-                alert(`QR Code généré: ${data.qrData}`);
-            } catch (error) {
-                console.error('Erreur lors de la génération du QR Code:', error);
-            }
-        };
-
-        const linkBankAccount = async () => {
-            const token = localStorage.getItem('token');
-            const bankAccountNumber = prompt("Entrez votre numéro de compte bancaire:");
-            
-            if (!bankAccountNumber) {
-                alert("Numéro de compte bancaire requis !");
-                return;
-            }
-
-            try {
-                const response = await fetch('https://ecobillapp.onrender.com/link-bank-account', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ bankAccountNumber })
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Erreur lors de la liaison du compte bancaire');
-                }
-
-                const data = await response.json();
-                alert(data.message);
-            } catch (error) {
-                console.error('Erreur lors de la liaison du compte bancaire:', error);
-            }
-        };
     </script>
 </body>
 </html>

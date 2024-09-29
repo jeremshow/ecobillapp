@@ -3,214 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tableau de Bord - Ecobill Pay</title>
+    <title>Tableau de Bord Administrateurs - Ecobill Pay</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <header>
-        <h1>Tableau de Bord</h1>
-        <nav>
-            <a href="index.html">Accueil</a>
-            <a href="#" id="logout">Déconnexion</a>
-        </nav>
+        <h1>Tableau de Bord Administrateurs</h1>
+        <button id="logoutBtn">Déconnexion</button>
     </header>
     <main>
-        <section>
-            <h2>Générer un QR Code</h2>
-            <button id="generate-qr">Générer QR Code</button>
-            <div id="qr-code"></div>
-        </section>
-        <section>
-            <h2>Transactions Récentes</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Client</th>
-                        <th>Montant</th>
-                        <th>Date</th>
-                        <th>Statut</th>
-                    </tr>
-                </thead>
-                <tbody id="transactions">
-                    <!-- Transactions seront ajoutées ici -->
-                </tbody>
-            </table>
-        </section>
-        <section>
-            <h2>Liste des Utilisateurs</h2>
-            <ul id="usersList"></ul>
-        </section>
-        <section>
-            <h2>Créer un Compte</h2>
-            <form id="createAccountForm">
-                <input type="text" id="name" placeholder="Nom" required>
-                <input type="email" id="email" placeholder="Email" required>
-                <input type="password" id="password" placeholder="Mot de passe" required>
-                <select id="userType">
-                    <option value="merchant">Commerçant</option>
-                    <option value="client">Client</option>
-                </select>
-                <button type="submit">Créer Compte</button>
-            </form>
-        </section>
-        <section>
-            <h2>Lier un Compte Bancaire</h2>
-            <form id="linkBankAccountForm">
-                <input type="text" id="bankAccountNumber" placeholder="Numéro de Compte Bancaire" required>
-                <button type="submit">Lier Compte Bancaire</button>
-            </form>
-        </section>
-        <section>
-            <h2>Envoyer de l'Argent</h2>
-            <form id="sendMoneyForm">
-                <input type="email" id="recipientEmail" placeholder="Email du Destinataire" required>
-                <input type="number" id="amount" placeholder="Montant" required>
-                <button type="submit">Envoyer Argent</button>
-            </form>
-        </section>
+        <div id="userList"></div>
+        <button id="createUserBtn">Créer un utilisateur</button>
     </main>
     <footer>
         <p>&copy; 2024 Ecobill Pay</p>
     </footer>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="dashboard_admin.js"></script>
     <script>
-        document.getElementById('logout').addEventListener('click', () => {
+        document.getElementById('logoutBtn').addEventListener('click', () => {
             localStorage.removeItem('token');
             window.location.href = 'login.html';
         });
-
-        document.getElementById('generate-qr').addEventListener('click', async () => {
-            const token = localStorage.getItem('token');
-            const response = await fetch('/generate-qr', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-            });
-            const data = await response.json();
-            if (data.qrData) {
-                document.getElementById('qr-code').innerHTML = '';
-                new QRCode(document.getElementById('qr-code'), data.qrData);
-            } else {
-                alert(data.error);
-            }
-        });
-
-        document.getElementById('createAccountForm').addEventListener('submit', async (event) => {
-            event.preventDefault(); // Empêche le rechargement de la page
-            const token = localStorage.getItem('token');
-            const name = document.getElementById('name').value;
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const userType = document.getElementById('userType').value;
-
-            const response = await fetch('/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-                body: JSON.stringify({ name, email, password, user_type: userType }),
-            });
-
-            const data = await response.json();
-            alert(data.message || data.error); // Afficher un message de succès ou d'erreur
-            loadUsers(); // Recharge la liste des utilisateurs après la création
-        });
-
-        document.getElementById('linkBankAccountForm').addEventListener('submit', async (event) => {
-            event.preventDefault(); // Empêche le rechargement de la page
-            const token = localStorage.getItem('token');
-            const bankAccountNumber = document.getElementById('bankAccountNumber').value;
-
-            const response = await fetch('/link-bank-account', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-                body: JSON.stringify({ bankAccountNumber }),
-            });
-
-            const data = await response.json();
-            alert(data.message || data.error); // Afficher un message de succès ou d'erreur
-        });
-
-        document.getElementById('sendMoneyForm').addEventListener('submit', async (event) => {
-            event.preventDefault(); // Empêche le rechargement de la page
-            const token = localStorage.getItem('token');
-            const recipientEmail = document.getElementById('recipientEmail').value;
-            const amount = document.getElementById('amount').value;
-
-            const response = await fetch('/send-money', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-                body: JSON.stringify({ recipientEmail, amount }),
-            });
-
-            const data = await response.json();
-            alert(data.message || data.error); // Afficher un message de succès ou d'erreur
-        });
-
-        // Fonction pour charger les utilisateurs
-        async function loadUsers() {
-            const token = localStorage.getItem('token');
-            const response = await fetch('/users', {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-            });
-
-            if (response.ok) {
-                const users = await response.json();
-                const usersList = document.getElementById('usersList');
-                usersList.innerHTML = '';
-
-                users.forEach(user => {
-                    const li = document.createElement('li');
-                    li.textContent = `${user.name} (${user.email})`;
-                    usersList.appendChild(li);
-                });
-            } else {
-                console.error('Erreur lors de la récupération des utilisateurs:', response.statusText);
-            }
-        }
-
-        // Fonction pour charger les transactions
-        async function loadTransactions() {
-            const token = localStorage.getItem('token');
-            const response = await fetch('/transactions', {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                },
-            });
-            const data = await response.json();
-            const transactions = document.getElementById('transactions');
-            transactions.innerHTML = ''; // Vider les transactions précédentes
-            data.transactions.forEach(tx => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${tx.id}</td>
-                    <td>${tx.clientName}</td>
-                    <td>${tx.amount}</td>
-                    <td>${tx.date}</td>
-                    <td>${tx.status}</td>
-                `;
-                transactions.appendChild(row);
-            });
-        }
-
-        // Charger les utilisateurs et les transactions au chargement de la page
-        loadUsers();
-        loadTransactions();
     </script>
 </body>
 </html>
