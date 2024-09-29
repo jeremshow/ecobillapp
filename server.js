@@ -23,24 +23,17 @@ const pool = new Pool({
     port: process.env.DB_PORT || 5432,
 });
 
-// Middleware pour vérifier le token JWT et les droits d'accès
-function authenticateToken(requiredGrade) {
-    return (req, res, next) => {
-        const token = req.headers['authorization']?.split(' ')[1];
-        if (!token) return res.sendStatus(401);
+// Middleware d'authentification
+const authenticateToken = (req, res, next) => {
+    const token = req.headers['authorization']?.split(' ')[1]; // Récupération du token
+    if (!token) return res.sendStatus(401); // Pas de token
 
-        jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-            if (err) return res.sendStatus(403);
-            req.user = user;
-
-            // Vérification des droits d'accès si un grade est requis
-            if (requiredGrade && req.user.grade > requiredGrade) {
-                return res.sendStatus(403); // Accès interdit
-            }
-            next();
-        });
-    };
-}
+    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+        if (err) return res.sendStatus(403); // Token invalide
+        req.user = user; // Ajoutez l'utilisateur à la requête
+        next(); // Passer au middleware suivant
+    });
+};
 
 // Route pour la racine
 app.get('/', (req, res) => {
@@ -57,7 +50,7 @@ app.get('/signup.html', (req, res) => {
 });
 
 // Routes pour les tableaux de bord
-app.get('/dashboard_admin.html', authenticateToken(1), (req, res) => {
+app.get('/dashboard_admin.html', authenticateToken, (req, res) => {
     if (req.user.usertype === 'admin') {
         res.sendFile(__dirname + '/dashboard_admin.html');
     } else {
@@ -65,7 +58,7 @@ app.get('/dashboard_admin.html', authenticateToken(1), (req, res) => {
     }
 });
 
-app.get('/dashboard_client.html', authenticateToken(2), (req, res) => {
+app.get('/dashboard_client.html', authenticateToken, (req, res) => {
     if (req.user.usertype === 'client') {
         res.sendFile(__dirname + '/dashboard_client.html');
     } else {
@@ -73,7 +66,7 @@ app.get('/dashboard_client.html', authenticateToken(2), (req, res) => {
     }
 });
 
-app.get('/dashboard_merchant.html', authenticateToken(3), (req, res) => {
+app.get('/dashboard_merchant.html', authenticateToken, (req, res) => {
     if (req.user.usertype === 'merchant') {
         res.sendFile(__dirname + '/dashboard_merchant.html');
     } else {
@@ -101,7 +94,11 @@ app.post('/login', async (req, res) => {
 });
 
 // Route pour créer un nouvel utilisateur
-app.post('/admin/create-user', authenticateToken(1), async (req, res) => {
+app.post('/admin/create-user', authenticateToken, async (req, res) => {
+    if (req.user.grade !== 1) { // Vérifie si l'utilisateur est un admin
+        return res.sendStatus(403); // Interdit pour les utilisateurs non autorisés
+    }
+
     const { name, email, password, usertype } = req.body;
 
     if (!name || !email || !password || !usertype) {

@@ -5,12 +5,27 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
     const password = document.getElementById('password').value;
     const usertype = document.getElementById('usertype').value; // Récupère le type d'utilisateur
 
+    // Ajout de la gestion du token
+    const token = localStorage.getItem('token');
+    if (token) {
+        const payload = JSON.parse(atob(token.split('.')[1])); // Décodage du payload
+        const currentTime = Math.floor(Date.now() / 1000); // Temps actuel en secondes
+
+        if (payload.exp < currentTime) {
+            console.log('Le token a expiré.');
+            // Gestion de l'expiration (par exemple, redirection vers la page de connexion)
+            window.location.href = 'login.html'; // Redirige vers la page de connexion
+        } else {
+            console.log('Token valide, grade:', payload.grade);
+        }
+    }
+
     try {
         const response = await fetch('/admin/create-user', { // URL de la route pour la création d'utilisateur
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + localStorage.getItem('token') // Ajoute le token d'authentification
+                'Authorization': 'Bearer ' + token // Ajoute le token d'authentification
             },
             body: JSON.stringify({ name, email, password, usertype }) // Utilise le type d'utilisateur sélectionné
         });
