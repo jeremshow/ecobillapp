@@ -3,25 +3,15 @@
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "bcrypt": "^5.1.1",
-    "bcryptjs": "^2.4.3",
-    "body-parser": "^1.20.3",
+    "bcrypt": "^5.1.0",
     "cors": "^2.8.5",
-    "express": "^4.21.0",
-    "jsonwebtoken": "^9.0.2",
-    "jwt-simple": "^0.5.6",
-    "pg": "^8.13.0",
-    "pg-hstore": "^2.3.4",
-    "qrcode": "^1.5.4",
-    "sequelize": "^6.37.3",
-    "sequelize-cli": "^6.6.2"
-  },
-  "description": ""
+    "dotenv": "^16.0.0",
+    "express": "^4.17.3",
+    "jsonwebtoken": "^8.5.1",
+    "pg": "^8.7.1",
+    "qrcode": "^1.4.4"
+  }
 }
