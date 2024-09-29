@@ -15,6 +15,14 @@
             <input type="text" id="name" placeholder="Nom" required>
             <input type="email" id="email" placeholder="Email" required>
             <input type="password" id="password" placeholder="Mot de passe" required>
+            
+            <label for="usertype">Type d'utilisateur :</label>
+            <select id="usertype" required>
+                <option value="" disabled selected>Choisissez votre type d'utilisateur</option>
+                <option value="client">Client</option>
+                <option value="merchant">Commerçant</option>
+            </select>
+
             <button type="submit">Créer un compte</button>
         </form>
         <p>Déjà un compte ? <a href="login.html">Se connecter</a></p>
@@ -29,21 +37,22 @@
             const name = document.getElementById('name').value;
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
+            const usertype = document.getElementById('usertype').value; // Récupère le type d'utilisateur
 
             try {
-                const response = await fetch('/admin/create-user', { // URL de l'API pour créer l'utilisateur
+                const response = await fetch('/admin/create-user', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ name, email, password, usertype: 'client' }) // Ajoute usertype
+                    body: JSON.stringify({ name, email, password, usertype }) // Utilise le type d'utilisateur sélectionné
                 });
 
                 if (response.ok) {
                     window.location.href = 'login.html'; // Redirige vers la page de connexion
                 } else {
                     const errorData = await response.json();
-                    alert('Erreur lors de la création du compte: ' + (errorData.message || 'Erreur inconnue'));
+                    alert('Erreur lors de la création du compte: ' + (errorData.error || 'Erreur inconnue'));
                 }
             } catch (error) {
                 console.error('Erreur:', error);

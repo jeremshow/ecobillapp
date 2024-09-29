@@ -59,6 +59,7 @@ app.get('/signup.html', (req, res) => {
     res.sendFile(__dirname + '/signup.html'); // Modifié pour rediriger vers signup.html
 });
 
+// Routes pour les tableaux de bord
 app.get('/dashboard_admin.html', authenticateToken, (req, res) => {
     if (req.user.usertype === 'admin') {
         res.sendFile(__dirname + '/dashboard_admin.html');
@@ -140,6 +141,9 @@ app.post('/admin/create-user', authenticateToken, checkAdminGrade(1), async (req
         res.status(201).json(result.rows[0]);
     } catch (err) {
         console.error('Erreur lors de la création de compte:', err);
+        if (err.code === '23505') {
+            return res.status(409).json({ error: 'Cet email est déjà utilisé.' }); // Conflit d'email
+        }
         res.status(500).json({ error: 'Erreur lors de la création du compte.' });
     }
 });
