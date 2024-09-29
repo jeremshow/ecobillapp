@@ -84,11 +84,11 @@ app.post('/login', async (req, res) => {
             const token = jwt.sign({ id: user.id, email: user.email, usertype: user.usertype }, process.env.JWT_SECRET);
             res.json({ token });
         } else {
-            res.status(401).send('Identifiants incorrects');
+            res.status(401).json({ error: 'Identifiants incorrects' }); // Changement ici pour renvoyer un JSON
         }
     } catch (err) {
         console.error(err);
-        res.status(500).send('Erreur serveur');
+        res.status(500).json({ error: 'Erreur serveur' }); // Changement ici pour renvoyer un JSON
     }
 });
 
@@ -102,7 +102,7 @@ app.post('/admin/create-user', async (req, res) => { // Modifié pour correspond
         res.json(result.rows[0]);
     } catch (err) {
         console.error(err);
-        res.status(500).send('Erreur serveur');
+        res.status(500).json({ error: 'Erreur serveur' }); // Changement ici pour renvoyer un JSON
     }
 });
 
@@ -115,7 +115,7 @@ app.get('/admin/users', authenticateToken, async (req, res) => {
         res.json(result.rows);
     } catch (err) {
         console.error(err);
-        res.status(500).send('Erreur serveur');
+        res.status(500).json({ error: 'Erreur serveur' }); // Changement ici pour renvoyer un JSON
     }
 });
 
@@ -130,7 +130,7 @@ app.get('/admin/generate-qr/:merchantId', authenticateToken, async (req, res) =>
         res.json({ qrCodeUrl });
     } catch (err) {
         console.error(err);
-        res.status(500).send('Erreur lors de la génération du QR Code.');
+        res.status(500).json({ error: 'Erreur lors de la génération du QR Code.' }); // Changement ici pour renvoyer un JSON
     }
 });
 
