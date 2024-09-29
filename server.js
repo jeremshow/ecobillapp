@@ -73,7 +73,7 @@ const authenticate = (req, res, next) => {
     const authHeader = req.headers.authorization;
     if (authHeader) {
         const token = authHeader.split(' ')[1];
-        jwt.verify(token, 'votre_secret_jwt', (err, user) => {
+        jwt.verify(token, '250104@Jl', (err, user) => {
             if (err) {
                 return res.sendStatus(403); // Interdit
             }
@@ -141,7 +141,7 @@ app.post('/login', async (req, res) => {
             return res.status(401).json({ error: 'Mot de passe invalide' });
         }
 
-        const token = jwt.sign({ userId: user.id, userType: user.user_type, email: user.email }, 'votre_secret_jwt', { expiresIn: '1h' });
+        const token = jwt.sign({ userId: user.id, userType: user.user_type, email: user.email }, '250104@Jl', { expiresIn: '1h' });
         
         // Renvoie le token et le type d'utilisateur
         res.json({ token, userType: user.user_type });
@@ -237,25 +237,41 @@ app.post('/send-money', authenticate, async (req, res) => {
     const { recipientEmail, amount } = req.body;
 
     if (!recipientEmail || !amount) {
-        return res.status(400).json({ error: 'Tous les champs sont requis' });
+        return res.status(400).json({ error: 'Email du destinataire et montant requis' });
     }
 
     try {
-        const transactionQuery = `
+        const insertTransactionQuery = `
             INSERT INTO transactions (sender_id, recipient_email, amount)
             VALUES ($1, $2, $3) RETURNING *;
         `;
-        await client.query(transactionQuery, [req.user.userId, recipientEmail, amount]);
-
+        await client.query(insertTransactionQuery, [req.user.userId, recipientEmail, amount]);
+        
         res.status(201).json({ message: 'Transfert d\'argent effectué avec succès' });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: 'Erreur lors de l\'envoi de l\'argent' });
+        res.status(500).json({ error: 'Erreur lors de l\'envoi d\'argent' });
+    }
+});
+
+// Route pour récupérer les transactions
+app.get('/transactions', authenticate, async (req, res) => {
+    const userId = req.user.userId;
+    try {
+        const transactionsQuery = `
+            SELECT * FROM transactions 
+            WHERE sender_id = $1 OR recipient_email = $2;
+        `;
+        const result = await client.query(transactionsQuery, [userId, req.user.email]);
+        res.status(200).json(result.rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Erreur lors de la récupération des transactions' });
     }
 });
 
 // Démarrer le serveur
-const PORT = 5452; // Remplacez par le port souhaité
+const PORT = 5452; // Port du serveur
 app.listen(PORT, () => {
-    console.log(`Serveur en cours d'exécution sur le port ${PORT}`);
+    console.log(`Serveur en écoute sur le port ${PORT}`);
 });

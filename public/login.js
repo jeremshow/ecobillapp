@@ -5,8 +5,7 @@ document.getElementById('loginForm').addEventListener('submit', async (event) =>
     const password = document.getElementById('password').value;
 
     try {
-        // Utilise l'URL de production pour l'API
-        const response = await fetch('https://ecobillapp.onrender.com/login', {
+        const response = await fetch('https://ecobillapp.onrender.com/login', { // Endpoint correct
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -17,6 +16,10 @@ document.getElementById('loginForm').addEventListener('submit', async (event) =>
         // Vérification de la réponse du serveur
         if (response.ok) {
             const data = await response.json();
+
+            // Ajoute des console.log pour vérifier les valeurs
+            console.log('Token:', data.token); // Affiche le token
+            console.log('User Type:', data.userType); // Affiche le type d'utilisateur
 
             // Vérifier que les données contiennent le token et le type d'utilisateur
             if (data.token && data.userType) {
