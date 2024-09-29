@@ -31,41 +31,6 @@
         <p>&copy; 2024 Ecobill Pay</p>
     </footer>
 
-    <script>
-        document.getElementById('signupForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const name = document.getElementById('name').value;
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const usertype = document.getElementById('usertype').value; // Récupère le type d'utilisateur
-
-            try {
-                const response = await fetch('/admin/create-user', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ name, email, password, usertype }) // Utilise le type d'utilisateur sélectionné
-                });
-
-                if (response.ok) {
-                    window.location.href = 'login.html'; // Redirige vers la page de connexion
-                } else {
-                    let errorMessage = 'Erreur lors de la création du compte';
-                    const contentType = response.headers.get('content-type');
-                    if (contentType && contentType.includes('application/json')) {
-                        const errorData = await response.json();
-                        errorMessage += ': ' + (errorData.message || 'Erreur inconnue');
-                    } else {
-                        errorMessage += ': ' + await response.text(); // Gérer les réponses texte
-                    }
-                    alert(errorMessage);
-                }
-            } catch (error) {
-                console.error('Erreur:', error);
-                alert('Erreur lors de la création du compte: ' + error.message);
-            }
-        });
-    </script>
+    <script src="signup.js"></script> <!-- Assurez-vous d'inclure le script JS -->
 </body>
 </html>

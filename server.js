@@ -133,44 +133,20 @@ app.post('/admin/create-user', authenticateToken(1), async (req, res) => {
             'INSERT INTO users (name, email, password, usertype, grade) VALUES ($1, $2, $3, $4, $5) RETURNING *', 
             [name, email, hashedPassword, usertype, grade]
         );
-
-        // Retourner l'utilisateur créé
-        res.status(201).json(result.rows[0]);
+        
+        const newUser = result.rows[0];
+        res.status(201).json({ message: 'Utilisateur créé avec succès', user: newUser });
     } catch (err) {
-        console.error('Erreur lors de la création de compte:', err);
+        console.error(err);
         if (err.code === '23505') {
-            return res.status(409).json({ error: 'Cet email est déjà utilisé.' }); // Conflit d'email
+            return res.status(400).json({ error: 'L\'email est déjà utilisé.' });
         }
-        res.status(500).json({ error: 'Erreur lors de la création du compte.' });
-    }
-});
-
-// Route pour récupérer les utilisateurs (administrateur uniquement)
-app.get('/admin/users', authenticateToken(1), async (req, res) => {
-    try {
-        const result = await pool.query('SELECT id, name, email, usertype, grade FROM users'); // Inclure le grade dans la requête
-        res.json(result.rows);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Erreur serveur' });
-    }
-});
-
-// Route pour créer un QR Code
-app.get('/admin/generate-qr/:merchantId', authenticateToken(1), async (req, res) => {
-    const { merchantId } = req.params;
-    const qrData = `https://ecobillapp.onrender.com/payment?merchantId=${merchantId}`;
-    try {
-        const qrCodeUrl = await QRCode.toDataURL(qrData);
-        res.json({ qrCodeUrl });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Erreur lors de la génération du QR Code.' });
+        res.status(500).json({ error: 'Erreur lors de la création de l\'utilisateur' });
     }
 });
 
 // Démarrer le serveur
-const PORT = process.env.PORT || 5492;
+const PORT = process.env.PORT || 5452;
 app.listen(PORT, () => {
     console.log(`Serveur en écoute sur le port ${PORT}`);
 });
