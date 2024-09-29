@@ -22,15 +22,6 @@ const pool = new Pool({
     port: process.env.DB_PORT || 5432, // Utilise une variable d'environnement
 });
 
-// Test de connexion à la base de données
-pool.connect((err, client, release) => {
-    if (err) {
-        return console.error('Erreur de connexion à la base de données:', err.stack);
-    }
-    console.log('Connexion à la base de données réussie');
-    release();
-});
-
 // Middleware pour vérifier le token JWT
 function authenticateToken(req, res, next) {
     const token = req.headers['authorization']?.split(' ')[1];
