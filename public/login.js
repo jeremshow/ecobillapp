@@ -5,7 +5,8 @@ document.getElementById('loginForm').addEventListener('submit', async (event) =>
     const password = document.getElementById('password').value;
 
     try {
-        const response = await fetch('http://localhost:5452/login', {
+        // Utilise l'URL de production pour l'API
+        const response = await fetch('https://ecobillapp.onrender.com/login', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
