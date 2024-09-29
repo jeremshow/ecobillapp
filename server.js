@@ -7,11 +7,13 @@ const cors = require('cors');
 const QRCode = require('qrcode');
 const bcrypt = require('bcrypt'); // Ajout de bcrypt pour le hachage des mots de passe
 require('dotenv').config(); // Assure-toi d'installer dotenv pour les variables d'environnement
+const path = require('path'); // Ajouté pour gérer les chemins
 
 // Initialise l'application
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
+app.use(express.static('public')); // Assurez-vous que les fichiers statiques sont servis depuis le dossier public
 
 // Configure ta base de données (Render)
 const pool = new Pool({
@@ -36,7 +38,7 @@ function authenticateToken(req, res, next) {
 
 // Route par défaut pour gérer la racine
 app.get('/', (req, res) => {
-    res.send('Bienvenue sur l\'API Ecobill Pay');
+    res.sendFile(path.join(__dirname, 'public', 'index.html')); // Renvoie le fichier index.html
 });
 
 // Route pour se connecter et obtenir un token
