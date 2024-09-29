@@ -75,7 +75,22 @@ app.get('/admin/users', authenticateToken, async (req, res) => {
     }
 });
 
-// Route pour créer un nouvel utilisateur
+// Route pour créer un compte utilisateur
+app.post('/signup', async (req, res) => {
+    const { name, email, password } = req.body;
+    const hashedPassword = await bcrypt.hash(password, 10); // Hachage du mot de passe
+
+    try {
+        // Par défaut, on attribue le type 'client' à l'utilisateur
+        const result = await pool.query('INSERT INTO users (name, email, password, usertype) VALUES ($1, $2, $3, $4) RETURNING *', [name, email, hashedPassword, 'client']);
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Erreur lors de la création du compte');
+    }
+});
+
+// Route pour créer un nouvel utilisateur (par un admin)
 app.post('/admin/create-user', authenticateToken, async (req, res) => {
     // Vérifie que l'utilisateur est un administrateur
     if (req.user.usertype !== 'admin') return res.sendStatus(403);
