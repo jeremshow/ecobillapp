@@ -51,8 +51,15 @@
                 if (response.ok) {
                     window.location.href = 'login.html'; // Redirige vers la page de connexion
                 } else {
-                    const errorData = await response.json();
-                    alert('Erreur lors de la création du compte: ' + (errorData.error || 'Erreur inconnue'));
+                    let errorMessage = 'Erreur lors de la création du compte';
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        const errorData = await response.json();
+                        errorMessage += ': ' + (errorData.message || 'Erreur inconnue');
+                    } else {
+                        errorMessage += ': ' + await response.text(); // Gérer les réponses texte
+                    }
+                    alert(errorMessage);
                 }
             } catch (error) {
                 console.error('Erreur:', error);
