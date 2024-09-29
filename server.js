@@ -7,13 +7,11 @@ const cors = require('cors');
 const QRCode = require('qrcode');
 const bcrypt = require('bcrypt'); // Ajout de bcrypt pour le hachage des mots de passe
 require('dotenv').config(); // Assure-toi d'installer dotenv pour les variables d'environnement
-const path = require('path'); // Ajouté pour gérer les chemins
 
 // Initialise l'application
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static('public')); // Assurez-vous que les fichiers statiques sont servis depuis le dossier public
 
 // Configure ta base de données (Render)
 const pool = new Pool({
@@ -36,9 +34,20 @@ function authenticateToken(req, res, next) {
     });
 }
 
+// Route de test de connexion à la base de données
+app.get('/test-db', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT NOW()');
+        res.json({ message: "Connexion réussie à la base de données", time: result.rows[0].now });
+    } catch (err) {
+        console.error('Erreur de connexion à la base de données', err);
+        res.status(500).send('Erreur de connexion à la base de données');
+    }
+});
+
 // Route par défaut pour gérer la racine
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html')); // Renvoie le fichier index.html
+    res.send('Bienvenue sur l\'API Ecobill Pay');
 });
 
 // Route pour se connecter et obtenir un token
@@ -75,22 +84,7 @@ app.get('/admin/users', authenticateToken, async (req, res) => {
     }
 });
 
-// Route pour créer un compte utilisateur
-app.post('/signup', async (req, res) => {
-    const { name, email, password } = req.body;
-    const hashedPassword = await bcrypt.hash(password, 10); // Hachage du mot de passe
-
-    try {
-        // Par défaut, on attribue le type 'client' à l'utilisateur
-        const result = await pool.query('INSERT INTO users (name, email, password, usertype) VALUES ($1, $2, $3, $4) RETURNING *', [name, email, hashedPassword, 'client']);
-        res.json(result.rows[0]);
-    } catch (err) {
-        console.error(err);
-        res.status(500).send('Erreur lors de la création du compte');
-    }
-});
-
-// Route pour créer un nouvel utilisateur (par un admin)
+// Route pour créer un nouvel utilisateur
 app.post('/admin/create-user', authenticateToken, async (req, res) => {
     // Vérifie que l'utilisateur est un administrateur
     if (req.user.usertype !== 'admin') return res.sendStatus(403);
