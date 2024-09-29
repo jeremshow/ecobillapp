@@ -249,23 +249,30 @@ app.post('/send-money', authenticate, async (req, res) => {
     }
 });
 
-// Route pour récupérer les transactions (pour les commerçants et administrateurs)
-app.get('/transactions', authenticate, async (req, res) => {
-    if (req.user.userType === 'client') {
-        return res.status(403).json({ error: 'Accès réservé aux commerçants et administrateurs' });
-    }
-
+// Route pour récupérer les données du tableau de bord
+app.get('/dashboard', authenticate, async (req, res) => {
     try {
-        const transactionsQuery = `
-            SELECT * FROM transactions
-            WHERE sender_id = $1 OR recipient_email = $2
-            ORDER BY date DESC;
-        `;
-        const result = await client.query(transactionsQuery, [req.user.userId, req.user.email]);
-        res.status(200).json(result.rows);
+        const userType = req.user.userType;
+
+        // Logique pour récupérer les données en fonction du type d'utilisateur
+        let dashboardData = {};
+        if (userType === 'admin') {
+            // Récupérer les données spécifiques aux administrateurs
+            dashboardData.message = 'Bienvenue, Admin ! Voici vos données.';
+        } else if (userType === 'merchant') {
+            // Récupérer les données spécifiques aux commerçants
+            dashboardData.message = 'Bienvenue, Commerçant ! Voici vos données.';
+        } else if (userType === 'client') {
+            // Récupérer les données spécifiques aux clients
+            dashboardData.message = 'Bienvenue, Client ! Voici vos données.';
+        } else {
+            return res.sendStatus(403); // Accès interdit pour les types d'utilisateur non reconnus
+        }
+
+        res.json(dashboardData);
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: 'Erreur lors de la récupération des transactions' });
+        res.status(500).json({ error: 'Erreur lors de la récupération des données du tableau de bord.' });
     }
 });
 

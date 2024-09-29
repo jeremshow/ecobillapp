@@ -25,6 +25,28 @@
         document.addEventListener('DOMContentLoaded', () => {
             fetchDashboard(); // Appel de la fonction pour récupérer les données
         });
+
+        async function fetchDashboard() {
+            try {
+                const response = await fetch('/dashboard', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}` // Assurez-vous que le token est stocké dans le localStorage
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Erreur lors de la récupération des données: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                // Manipulez le DOM ici pour afficher les données du tableau de bord
+                document.getElementById('dashboardContent').innerHTML = JSON.stringify(data);
+            } catch (error) {
+                console.error('Erreur:', error);
+                document.getElementById('dashboardContent').innerHTML = 'Erreur lors de la récupération des données du tableau de bord.';
+            }
+        }
     </script>
 </body>
 </html>
