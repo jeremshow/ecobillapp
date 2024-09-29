@@ -46,7 +46,7 @@ app.get('/login.html', (req, res) => {
 });
 
 app.get('/signup.html', (req, res) => {
-    res.sendFile(__dirname + '/signup.html');
+    res.sendFile(__dirname + '/signup.html'); // Modifié pour rediriger vers signup.html
 });
 
 app.get('/dashboard_admin.html', authenticateToken, (req, res) => {
