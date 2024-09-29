@@ -144,6 +144,6 @@ app.get('/merchant/transactions/:merchantId', authenticateToken, async (req, res
 });
 
 // Démarrer le serveur
-app.listen(5452, () => {
-    console.log('Serveur en écoute sur le port 5452');
+app.listen(5490, () => {
+    console.log('Serveur en écoute sur le port 5490');
 });
