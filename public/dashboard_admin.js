@@ -24,6 +24,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error('Erreur:', error);
         alert('Erreur lors de la récupération des utilisateurs.');
     }
+
+    document.getElementById('createUserBtn').addEventListener('click', () => {
+        document.getElementById('createUserModal').style.display = 'block';
+    });
+
+    document.getElementById('createUserForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const name = document.getElementById('newUserName').value;
+        const email = document.getElementById('newUserEmail').value;
+        const grade = document.getElementById('newUserGrade').value;
+
+        await createUser(name, email, grade);
+        document.getElementById('createUserModal').style.display = 'none';
+    });
 });
 
 function displayUsers(users) {
@@ -31,7 +45,7 @@ function displayUsers(users) {
     userList.innerHTML = '';
     users.forEach(user => {
         const userItem = document.createElement('div');
-        userItem.textContent = `${user.id} - ${user.name} - ${user.email} - ${user.usertype}`;
+        userItem.textContent = `${user.id} - ${user.name} - ${user.email} - Grade ${user.grade}`;
         
         const deleteButton = document.createElement('button');
         deleteButton.textContent = 'Supprimer';
@@ -43,6 +57,25 @@ function displayUsers(users) {
         userItem.appendChild(deleteButton);
         userList.appendChild(userItem);
     });
+}
+
+async function createUser(name, email, grade) {
+    const token = localStorage.getItem('token');
+    const response = await fetch('/admin/create-user', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name, email, grade })
+    });
+
+    if (!response.ok) {
+        alert('Erreur lors de la création de l\'utilisateur.');
+    } else {
+        const newUser = await response.json();
+        displayUsers([...document.getElementById('userList').children, newUser]);
+    }
 }
 
 async function deleteUser(userId) {

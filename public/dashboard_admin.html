@@ -1,30 +1,20 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tableau de Bord Administrateurs - Ecobill Pay</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-    <header>
-        <h1>Tableau de Bord Administrateurs</h1>
-        <button id="logoutBtn">Déconnexion</button>
-    </header>
-    <main>
-        <div id="userList"></div>
-        <button id="createUserBtn">Créer un utilisateur</button>
-    </main>
-    <footer>
-        <p>&copy; 2024 Ecobill Pay</p>
-    </footer>
-
-    <script src="dashboard_admin.js"></script>
-    <script>
-        document.getElementById('logoutBtn').addEventListener('click', () => {
-            localStorage.removeItem('token');
-            window.location.href = 'login.html';
-        });
-    </script>
-</body>
-</html>
+<main>
+    <div id="userList"></div>
+    <button id="createUserBtn">Créer un utilisateur</button>
+    
+    <div id="createUserModal" style="display: none;">
+        <h2>Créer un nouvel utilisateur</h2>
+        <form id="createUserForm">
+            <input type="text" id="newUserName" placeholder="Nom" required>
+            <input type="email" id="newUserEmail" placeholder="Email" required>
+            <select id="newUserGrade" required>
+                <option value="1">Administrateur Grade 1</option>
+                <option value="2">Administrateur Grade 2</option>
+                <option value="3">Administrateur Grade 3</option>
+                <option value="4">Client</option>
+                <option value="5">Commerçant</option>
+            </select>
+            <button type="submit">Créer</button>
+        </form>
+    </div>
+</main>

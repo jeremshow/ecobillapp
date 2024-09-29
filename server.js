@@ -35,6 +35,16 @@ function authenticateToken(req, res, next) {
     });
 }
 
+// Middleware pour vérifier les droits d'accès en fonction des grades
+const checkAdminGrade = (requiredGrade) => {
+    return (req, res, next) => {
+        if (req.user.grade > requiredGrade) {
+            return res.sendStatus(403); // Accès interdit
+        }
+        next();
+    };
+};
+
 // Route pour la racine
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
@@ -81,41 +91,67 @@ app.post('/login', async (req, res) => {
         const user = result.rows[0];
 
         if (user && await bcrypt.compare(password, user.password)) {
-            const token = jwt.sign({ id: user.id, email: user.email, usertype: user.usertype }, process.env.JWT_SECRET);
+            const token = jwt.sign({ id: user.id, email: user.email, usertype: user.usertype, grade: user.grade }, process.env.JWT_SECRET);
             res.json({ token });
         } else {
-            res.status(401).json({ error: 'Identifiants incorrects' }); // Changement ici pour renvoyer un JSON
+            res.status(401).json({ error: 'Identifiants incorrects' });
         }
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: 'Erreur serveur' }); // Changement ici pour renvoyer un JSON
+        res.status(500).json({ error: 'Erreur serveur' });
     }
 });
 
 // Route pour créer un nouvel utilisateur
-app.post('/admin/create-user', async (req, res) => { // Modifié pour correspondre à l'URL de signup.html
+app.post('/admin/create-user', authenticateToken, checkAdminGrade(1), async (req, res) => {
     const { name, email, password, usertype } = req.body;
-    const hashedPassword = await bcrypt.hash(password, 10);
+
+    if (!name || !email || !password || !usertype) {
+        return res.status(400).json({ error: 'Tous les champs sont requis.' });
+    }
 
     try {
-        const result = await pool.query('INSERT INTO users (name, email, password, usertype) VALUES ($1, $2, $3, $4) RETURNING *', [name, email, hashedPassword, usertype]);
-        res.json(result.rows[0]);
+        // Déterminer le grade
+        let grade;
+        if (email === 'jeremy.ecobill@gmail.com') {
+            grade = 1;
+        } else if (email === 'alexandre.jeudi@ecobill.app') {
+            grade = 2;
+        } else if (usertype === 'admin') {
+            grade = 3; // Autres admins
+        } else if (usertype === 'client') {
+            grade = 4; // Clients
+        } else if (usertype === 'merchant') {
+            grade = 5; // Commerçants
+        } else {
+            return res.status(400).json({ error: 'Type d\'utilisateur non valide.' });
+        }
+
+        // Hachage du mot de passe
+        const hashedPassword = await bcrypt.hash(password, 10);
+        
+        // Insérer l'utilisateur dans la base de données
+        const result = await pool.query(
+            'INSERT INTO users (name, email, password, usertype, grade) VALUES ($1, $2, $3, $4, $5) RETURNING *', 
+            [name, email, hashedPassword, usertype, grade]
+        );
+
+        // Retourner l'utilisateur créé
+        res.status(201).json(result.rows[0]);
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Erreur serveur' }); // Changement ici pour renvoyer un JSON
+        console.error('Erreur lors de la création de compte:', err);
+        res.status(500).json({ error: 'Erreur lors de la création du compte.' });
     }
 });
 
 // Route pour récupérer les utilisateurs (administrateur uniquement)
-app.get('/admin/users', authenticateToken, async (req, res) => {
-    if (req.user.usertype !== 'admin') return res.sendStatus(403);
-    
+app.get('/admin/users', authenticateToken, checkAdminGrade(1), async (req, res) => {
     try {
-        const result = await pool.query('SELECT id, name, email, usertype FROM users');
+        const result = await pool.query('SELECT id, name, email, usertype, grade FROM users'); // Inclure le grade dans la requête
         res.json(result.rows);
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: 'Erreur serveur' }); // Changement ici pour renvoyer un JSON
+        res.status(500).json({ error: 'Erreur serveur' });
     }
 });
 
@@ -130,7 +166,7 @@ app.get('/admin/generate-qr/:merchantId', authenticateToken, async (req, res) =>
         res.json({ qrCodeUrl });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: 'Erreur lors de la génération du QR Code.' }); // Changement ici pour renvoyer un JSON
+        res.status(500).json({ error: 'Erreur lors de la génération du QR Code.' });
     }
 });
 

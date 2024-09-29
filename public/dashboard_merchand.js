@@ -6,17 +6,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    const merchantId = 'ExempleId'; // À remplacer par l'ID du commerçant récupéré
-    document.getElementById('merchantId').textContent = `ID Commerçant : ${merchantId}`;
+    try {
+        const response = await fetch('/merchant/info', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Erreur lors de la récupération des informations du commerçant.');
+        }
+
+        const merchantInfo = await response.json();
+        document.getElementById('merchantId').textContent = `ID Commerçant : ${merchantInfo.id}`;
+    } catch (error) {
+        console.error('Erreur:', error);
+        alert('Erreur lors de la récupération des informations du commerçant.');
+    }
 
     document.getElementById('bankAccountForm').addEventListener('submit', async (event) => {
         event.preventDefault();
         const bankAccountNumber = document.getElementById('bankAccountNumber').value;
 
-        // Ajouter logique pour affilier le compte bancaire
-    });
-
-    document.getElementById('generateQRCodeBtn').addEventListener('click', () => {
-        // Ajouter logique pour générer le QR-Code
+        // Ajouter logique pour affilier le compte bancaire ici
     });
 });
