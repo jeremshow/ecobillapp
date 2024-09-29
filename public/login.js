@@ -4,30 +4,43 @@ document.getElementById('loginForm').addEventListener('submit', async (event) =>
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
 
-    const response = await fetch('http://localhost:5452/login', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-    });
+    try {
+        const response = await fetch('http://localhost:5452/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email, password }),
+        });
 
-    if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem('token', data.token); // Stocker le token dans le local storage
+        // Vérification de la réponse du serveur
+        if (response.ok) {
+            const data = await response.json();
 
-        // Rediriger en fonction du type d'utilisateur
-        if (data.userType === 'admin') {
-            window.location.href = 'http://localhost:5452/dashboard_admin.html';
-        } else if (data.userType === 'merchant') {
-            window.location.href = 'http://localhost:5452/dashboard_merchand.html';
-        } else if (data.userType === 'client') {
-            window.location.href = 'http://localhost:5452/dashboard_client.html';
+            // Vérifier que les données contiennent le token et le type d'utilisateur
+            if (data.token && data.userType) {
+                localStorage.setItem('token', data.token); // Stocker le token dans le local storage
+
+                // Rediriger en fonction du type d'utilisateur
+                if (data.userType === 'admin') {
+                    window.location.href = 'dashboard_admin.html'; // URL relative
+                } else if (data.userType === 'merchant') {
+                    window.location.href = 'dashboard_merchand.html'; // URL relative
+                } else if (data.userType === 'client') {
+                    window.location.href = 'dashboard_client.html'; // URL relative
+                } else {
+                    alert('Type d\'utilisateur non reconnu');
+                }
+            } else {
+                alert('Données de connexion invalides');
+            }
         } else {
-            alert('Type d\'utilisateur non reconnu');
+            // Gérer les erreurs de réponse
+            const errorData = await response.json();
+            alert(errorData.error || 'Erreur de connexion'); // Afficher l'erreur
         }
-    } else {
-        const errorData = await response.json();
-        alert(errorData.error); // Afficher l'erreur
+    } catch (error) {
+        console.error('Erreur lors de la connexion :', error);
+        alert('Erreur de connexion. Veuillez réessayer plus tard.');
     }
 });
