@@ -34,6 +34,11 @@ function authenticateToken(req, res, next) {
     });
 }
 
+// Route par défaut pour gérer la racine
+app.get('/', (req, res) => {
+    res.send('Bienvenue sur l\'API Ecobill Pay');
+});
+
 // Route pour se connecter et obtenir un token
 app.post('/login', async (req, res) => {
     const { email, password } = req.body;
