@@ -6,17 +6,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    const clientId = 'ExempleId'; // À remplacer par l'ID du client récupéré
-    document.getElementById('clientId').textContent = `ID Client : ${clientId}`;
+    try {
+        const response = await fetch('/client/info', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Erreur lors de la récupération des informations du client.');
+        }
+
+        const clientInfo = await response.json();
+        document.getElementById('clientId').textContent = `ID Client : ${clientInfo.id}`;
+    } catch (error) {
+        console.error('Erreur:', error);
+        alert('Erreur lors de la récupération des informations du client.');
+    }
 
     document.getElementById('bankAccountForm').addEventListener('submit', async (event) => {
         event.preventDefault();
         const bankAccountNumber = document.getElementById('bankAccountNumber').value;
 
-        // Ajouter logique pour affilier le compte bancaire
-    });
-
-    document.getElementById('scanQRCodeBtn').addEventListener('click', () => {
-        // Ajouter logique pour scanner le QR-Code
+        // Ajouter logique pour affilier le compte bancaire ici
     });
 });
