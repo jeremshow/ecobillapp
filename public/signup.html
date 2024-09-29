@@ -30,18 +30,24 @@
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
 
-            const response = await fetch('/signup', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ name, email, password })
-            });
+            try {
+                const response = await fetch('/admin/create-user', { // URL de l'API pour créer l'utilisateur
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name, email, password, usertype: 'client' }) // Ajoute usertype
+                });
 
-            if (response.ok) {
-                window.location.href = 'login.html'; // Redirige vers la page de connexion
-            } else {
-                alert('Erreur lors de la création du compte');
+                if (response.ok) {
+                    window.location.href = 'login.html'; // Redirige vers la page de connexion
+                } else {
+                    const errorData = await response.json();
+                    alert('Erreur lors de la création du compte: ' + (errorData.message || 'Erreur inconnue'));
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                alert('Erreur lors de la création du compte: ' + error.message);
             }
         });
     </script>

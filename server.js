@@ -93,7 +93,7 @@ app.post('/login', async (req, res) => {
 });
 
 // Route pour créer un nouvel utilisateur
-app.post('/signup', async (req, res) => {
+app.post('/admin/create-user', async (req, res) => { // Modifié pour correspondre à l'URL de signup.html
     const { name, email, password, usertype } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
 
