@@ -4,7 +4,6 @@ const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
 const { Pool } = require('pg');
 const cors = require('cors');
-const QRCode = require('qrcode');
 const bcrypt = require('bcrypt'); // Pour le hachage des mots de passe
 require('dotenv').config(); // Pour charger les variables d'environnement
 
@@ -88,7 +87,7 @@ app.post('/login', async (req, res) => {
             res.status(401).json({ error: 'Identifiants incorrects' });
         }
     } catch (err) {
-        console.error(err);
+        console.error('Erreur de connexion:', err);
         res.status(500).json({ error: 'Erreur serveur' });
     }
 });
@@ -121,7 +120,7 @@ app.post('/signup', async (req, res) => {
         const newUser = result.rows[0];
         res.status(201).json({ message: 'Utilisateur créé avec succès', user: newUser });
     } catch (err) {
-        console.error(err);
+        console.error('Erreur lors de la création de l\'utilisateur:', err);
         if (err.code === '23505') {
             return res.status(400).json({ error: 'L\'email est déjà utilisé.' });
         }
@@ -167,7 +166,7 @@ app.post('/admin/create-user', authenticateToken, async (req, res) => {
         const newUser = result.rows[0];
         res.status(201).json({ message: 'Utilisateur créé avec succès', user: newUser });
     } catch (err) {
-        console.error(err);
+        console.error('Erreur lors de la création de l\'utilisateur par admin:', err);
         if (err.code === '23505') {
             return res.status(400).json({ error: 'L\'email est déjà utilisé.' });
         }
