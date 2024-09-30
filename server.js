@@ -2,7 +2,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
-const { Pool } = require('pg');
+const pool = require('./config'); // Importer le pool depuis config.js
 const cors = require('cors');
 const QRCode = require('qrcode');
 const bcrypt = require('bcrypt'); // Pour le hachage des mots de passe
@@ -14,15 +14,6 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static('public')); // Pour servir les fichiers statiques
-
-// Configurer la base de données (Render)
-const pool = new Pool({
-    user: process.env.DB_USER, // Utiliser une variable d'environnement
-    host: process.env.DB_HOST,
-    database: process.env.DB_NAME,
-    password: process.env.DB_PASSWORD,
-    port: process.env.DB_PORT || 5432,
-});
 
 // Middleware d'authentification
 const authenticateToken = (req, res, next) => {

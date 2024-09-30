@@ -26,7 +26,7 @@ footer {
     color: white;
     text-align: center;
     padding: 10px;
-    position: relative; /* Ajusté pour éviter le positionnement fixe */
+    position: fixed; /* Ajusté pour éviter le positionnement fixe */
     bottom: 0;
     width: 100%; /* Occupe toute la largeur */
 }
