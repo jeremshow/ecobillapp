@@ -3,28 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inscription</title>
+    <title>Créer un Compte - Ecobill Pay</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <form id="signupForm">
-        <label for="name">Nom:</label>
-        <input type="text" id="name" required>
-        
-        <label for="email">Email:</label>
-        <input type="email" id="email" required>
+    <header>
+        <h1>Créer un Compte sur Ecobill Pay</h1>
+    </header>
+    <main>
+        <div class="container"> <!-- Conteneur ajouté -->
+            <form id="signupForm">
+                <input type="text" id="name" placeholder="Nom" required>
+                <input type="email" id="email" placeholder="Email" required>
+                <input type="password" id="password" placeholder="Mot de passe" required>
+                
+                <label for="usertype">Type d'utilisateur :</label>
+                <select id="usertype" required>
+                    <option value="" disabled selected>Choisissez votre type d'utilisateur</option>
+                    <option value="client">Client</option>
+                    <option value="merchant">Commerçant</option>
+                </select>
 
-        <label for="password">Mot de passe:</label>
-        <input type="password" id="password" required>
-
-        <label for="usertype">Type d'utilisateur:</label>
-        <select id="usertype" required>
-            <option value="client">Client</option>
-            <option value="merchant">Commerçant</option>
-        </select>
-
-        <button type="submit">S'inscrire</button>
-    </form>
-    <div id="error-message" style="display:none; color:red;"></div>
+                <button type="submit">Créer un compte</button>
+            </form>
+            <p id="error-message" style="color:red; display:none;"></p> <!-- Ajout d'un message d'erreur -->
+            <p>Déjà un compte ? <a href="login.html">Se connecter</a></p>
+        </div>
+    </main>
+    <footer>
+        <p>&copy; 2024 Ecobill Pay</p>
+    </footer>
 
     <script src="signup.js"></script>
 </body>
