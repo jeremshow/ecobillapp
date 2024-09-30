@@ -178,5 +178,5 @@ app.post('/admin/create-user', authenticateToken, async (req, res) => {
 // Démarrer le serveur
 const PORT = process.env.PORT || 5452;
 app.listen(PORT, () => {
-    console.log(Serveur en écoute sur le port ${PORT});
+    console.log(`Serveur en écoute sur le port ${PORT}`); // Correction de la syntaxe ici
 });
