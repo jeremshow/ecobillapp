@@ -5,15 +5,8 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
     const password = document.getElementById('password').value;
     const usertype = document.getElementById('usertype').value; // Récupère le type d'utilisateur
 
-    // Vérifie si l'utilisateur est déjà connecté
-    const token = localStorage.getItem('token');
-    if (token) {
-        alert('Vous êtes déjà connecté. Déconnectez-vous d\'abord pour créer un nouveau compte.');
-        return;
-    }
-
     try {
-        const response = await fetch('/admin/create-user', { // URL de la route pour la création d'utilisateur
+        const response = await fetch('/signup', { // Utilisez la route d'inscription
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -22,13 +15,17 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
         });
 
         if (response.ok) {
-            window.location.href = 'login.html'; // Redirige vers la page de connexion
+            // Connexion automatique après la création du compte
+            const data = await response.json();
+            localStorage.setItem('token', data.token); // Sauvegarder le token
+            localStorage.setItem('usertype', usertype); // Sauvegarder le type d'utilisateur
+            window.location.href = 'dashboard_client.html'; // Redirige vers le tableau de bord approprié
         } else {
             let errorMessage = 'Erreur lors de la création du compte';
             const contentType = response.headers.get('content-type');
             if (contentType && contentType.includes('application/json')) {
                 const errorData = await response.json();
-                errorMessage += ': ' + (errorData.message || 'Erreur inconnue');
+                errorMessage += ': ' + (errorData.error || 'Erreur inconnue'); // Corriger ici pour accéder au message d'erreur
             } else {
                 errorMessage += ': ' + await response.text(); // Gérer les réponses texte
             }
@@ -39,7 +36,7 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
     } catch (error) {
         console.error('Erreur:', error);
         const errorDisplay = document.getElementById('error-message');
-        errorDisplay.textContent = 'Erreur lors de la création du compte: ' + error.message;
+        errorDisplay.textContent = 'Erreur lors de la connexion au serveur';
         errorDisplay.style.display = 'block'; // Affiche le message d'erreur
     }
 });

@@ -83,7 +83,7 @@ app.post('/login', async (req, res) => {
 
         if (user && await bcrypt.compare(password, user.password)) {
             const token = jwt.sign({ id: user.id, email: user.email, usertype: user.usertype, grade: user.grade }, process.env.JWT_SECRET);
-            res.json({ token });
+            res.json({ token, usertype: user.usertype }); // Ajout du usertype à la réponse
         } else {
             res.status(401).json({ error: 'Identifiants incorrects' });
         }
