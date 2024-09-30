@@ -34,6 +34,41 @@
         <p>&copy; 2024 Ecobill Pay</p>
     </footer>
 
-    <script src="signup.js"></script>
+    <script>
+        document.getElementById('signupForm').addEventListener('submit', async (e) => {
+            e.preventDefault(); // Empêche le comportement par défaut du formulaire
+            
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const usertype = document.getElementById('usertype').value;
+
+            try {
+                const response = await fetch('/signup', { // Endpoint pour la création de compte
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ name, email, password, usertype }), // Envoie les données sous forme JSON
+                });
+
+                const data = await response.json();
+
+                // Gère les réponses du serveur
+                if (response.ok) {
+                    alert('Compte créé avec succès !'); // Message de succès
+                    // Vous pouvez rediriger vers la page de connexion ou le tableau de bord ici
+                } else {
+                    // Affiche le message d'erreur
+                    document.getElementById('error-message').innerText = data.error || 'Erreur lors de la création du compte.';
+                    document.getElementById('error-message').style.display = 'block';
+                }
+            } catch (err) {
+                console.error(err);
+                document.getElementById('error-message').innerText = 'Erreur de connexion au serveur.';
+                document.getElementById('error-message').style.display = 'block';
+            }
+        });
+    </script>
 </body>
 </html>
