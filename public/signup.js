@@ -6,7 +6,7 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
     const usertype = document.getElementById('usertype').value; // Récupère le type d'utilisateur
 
     try {
-        const response = await fetch('https://ecobillapp.onrender.com', { // Remplace par le bon port si nécessaire
+        const response = await fetch('https://ecobillapp.onrender.com/signup', { // Remplace par le bon port si nécessaire
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

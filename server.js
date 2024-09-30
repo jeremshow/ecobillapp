@@ -67,9 +67,9 @@ app.get('/dashboard_client.html', authenticateToken, (req, res) => {
     }
 });
 
-app.get('/dashboard_merchant.html', authenticateToken, (req, res) => {
+app.get('/dashboard_merchand.html', authenticateToken, (req, res) => {
     if (req.user.usertype === 'merchant') {
-        res.sendFile(__dirname + '/dashboard_merchant.html');
+        res.sendFile(__dirname + '/dashboard_merchand.html');
     } else {
         res.sendStatus(403);
     }
