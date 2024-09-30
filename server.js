@@ -93,7 +93,43 @@ app.post('/login', async (req, res) => {
     }
 });
 
-// Route pour créer un nouvel utilisateur
+// Route pour créer un nouvel utilisateur depuis le front (client ou commerçant)
+app.post('/signup', async (req, res) => {
+    const { name, email, password, usertype } = req.body;
+
+    if (!name || !email || !password || !usertype) {
+        return res.status(400).json({ error: 'Tous les champs sont requis.' });
+    }
+
+    try {
+        let grade;
+        if (usertype === 'client') {
+            grade = 4;
+        } else if (usertype === 'merchant') {
+            grade = 5;
+        } else {
+            return res.status(400).json({ error: 'Type d\'utilisateur non valide.' });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        
+        const result = await pool.query(
+            'INSERT INTO users (name, email, password, usertype, grade) VALUES ($1, $2, $3, $4, $5) RETURNING *', 
+            [name, email, hashedPassword, usertype, grade]
+        );
+
+        const newUser = result.rows[0];
+        res.status(201).json({ message: 'Utilisateur créé avec succès', user: newUser });
+    } catch (err) {
+        console.error(err);
+        if (err.code === '23505') {
+            return res.status(400).json({ error: 'L\'email est déjà utilisé.' });
+        }
+        res.status(500).json({ error: 'Erreur lors de la création de l\'utilisateur' });
+    }
+});
+
+// Route pour l'admin pour créer des utilisateurs
 app.post('/admin/create-user', authenticateToken, async (req, res) => {
     if (req.user.grade !== 1) { // Vérifie si l'utilisateur est un admin
         return res.sendStatus(403); // Interdit pour les utilisateurs non autorisés
@@ -106,7 +142,6 @@ app.post('/admin/create-user', authenticateToken, async (req, res) => {
     }
 
     try {
-        // Déterminer le grade
         let grade;
         if (email === 'jeremy.ecobill@gmail.com') {
             grade = 1;
@@ -122,10 +157,8 @@ app.post('/admin/create-user', authenticateToken, async (req, res) => {
             return res.status(400).json({ error: 'Type d\'utilisateur non valide.' });
         }
 
-        // Hachage du mot de passe
         const hashedPassword = await bcrypt.hash(password, 10);
         
-        // Insérer l'utilisateur dans la base de données
         const result = await pool.query(
             'INSERT INTO users (name, email, password, usertype, grade) VALUES ($1, $2, $3, $4, $5) RETURNING *', 
             [name, email, hashedPassword, usertype, grade]
