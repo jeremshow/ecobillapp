@@ -50,8 +50,10 @@ function displayUsers(users) {
         const deleteButton = document.createElement('button');
         deleteButton.textContent = 'Supprimer';
         deleteButton.addEventListener('click', async () => {
-            await deleteUser(user.id);
-            userItem.remove();
+            if (confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) {
+                await deleteUser(user.id);
+                userItem.remove();
+            }
         });
 
         userItem.appendChild(deleteButton);

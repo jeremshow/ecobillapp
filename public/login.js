@@ -1,4 +1,3 @@
-// login.js
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('email').value;
@@ -29,10 +28,14 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
                 alert('Type d’utilisateur inconnu');
             }
         } else {
-            alert('Identifiants incorrects');
+            const errorMessage = document.getElementById('error-message');
+            errorMessage.textContent = 'Identifiants incorrects';
+            errorMessage.style.display = 'block'; // Affiche le message d'erreur
         }
     } catch (error) {
         console.error('Erreur lors de la connexion:', error);
-        alert('Erreur lors de la connexion: ' + error.message);
+        const errorMessage = document.getElementById('error-message');
+        errorMessage.textContent = 'Erreur lors de la connexion: ' + error.message;
+        errorMessage.style.display = 'block'; // Affiche le message d'erreur
     }
 });

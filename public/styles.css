@@ -73,3 +73,9 @@ select:focus {
     border-radius: 8px; /* Coins arrondis du conteneur */
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Ombre douce pour le conteneur */
 }
+
+#error-message {
+    color: red; /* Couleur du texte d'erreur */
+    margin-top: 10px; /* Espace au-dessus du message d'erreur */
+    font-weight: bold; /* Texte en gras */
+}

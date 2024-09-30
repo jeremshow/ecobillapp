@@ -42,7 +42,8 @@
 
                 const data = await response.json();
                 // Manipulez le DOM ici pour afficher les données du tableau de bord
-                const usersList = data.users.map(user => `<li>${user.name} (${user.email}) <button onclick="deleteUser(${user.id})">Supprimer</button></li>`).join('');
+                const usersList = data.users.map(user => 
+                    `<li>${user.name} (${user.email}) <button onclick="deleteUser(${user.id})">Supprimer</button></li>`).join('');
                 document.getElementById('dashboardContent').innerHTML = `<ul>${usersList}</ul>`;
             } catch (error) {
                 console.error('Erreur:', error);
@@ -56,7 +57,6 @@
         }
 
         async function deleteUser(userId) {
-            // Implémenter la logique de suppression d'utilisateur
             const response = await fetch(`/deleteUser/${userId}`, {
                 method: 'DELETE',
                 headers: {

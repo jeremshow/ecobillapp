@@ -29,6 +29,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         event.preventDefault();
         const bankAccountNumber = document.getElementById('bankAccountNumber').value;
 
-        // Ajouter logique pour affilier le compte bancaire ici
+        // Logique pour affilier le compte bancaire
+        const token = localStorage.getItem('token');
+        const response = await fetch('/client/affiliate-bank-account', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ bankAccountNumber })
+        });
+
+        if (response.ok) {
+            alert('Compte bancaire affilié avec succès.');
+        } else {
+            alert('Erreur lors de l\'affiliation du compte bancaire.');
+        }
     });
 });

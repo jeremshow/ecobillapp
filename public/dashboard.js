@@ -21,7 +21,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const data = await response.json();
         console.log('Données du tableau de bord reçues:', data);
+
         // Logique pour afficher les données ici
+        const usersList = data.users.map(user => 
+            `<li>${user.name} (${user.email}) <button onclick="deleteUser(${user.id})">Supprimer</button></li>`).join('');
+        document.getElementById('dashboardContent').innerHTML = `<ul>${usersList}</ul>`;
 
     } catch (error) {
         console.error('Erreur:', error);
@@ -29,3 +33,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.location.href = 'login.html';
     }
 });
+
+async function deleteUser(userId) {
+    const response = await fetch(`/deleteUser/${userId}`, {
+        method: 'DELETE',
+        headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+    });
+    if (response.ok) {
+        fetchDashboard(); // Recharger les données après suppression
+    } else {
+        alert('Erreur lors de la suppression de l\'utilisateur.');
+    }
+}
