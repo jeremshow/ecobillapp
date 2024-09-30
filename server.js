@@ -6,6 +6,7 @@ const { Pool } = require('pg');
 const cors = require('cors');
 const QRCode = require('qrcode');
 const bcrypt = require('bcrypt'); // Pour le hachage des mots de passe
+const fs = require('fs'); // Pour la journalisation des erreurs
 require('dotenv').config(); // Pour charger les variables d'environnement
 
 // Initialiser l'application
@@ -89,6 +90,7 @@ app.post('/login', async (req, res) => {
         }
     } catch (err) {
         console.error(err);
+        fs.appendFileSync('error.log', `[${new Date().toISOString()}] ${err}\n`); // Journalisation de l'erreur
         res.status(500).json({ error: 'Erreur serveur' });
     }
 });
@@ -122,6 +124,7 @@ app.post('/signup', async (req, res) => {
         res.status(201).json({ message: 'Utilisateur créé avec succès', user: newUser });
     } catch (err) {
         console.error(err);
+        fs.appendFileSync('error.log', `[${new Date().toISOString()}] ${err}\n`); // Journalisation de l'erreur
         if (err.code === '23505') {
             return res.status(400).json({ error: 'L\'email est déjà utilisé.' });
         }
@@ -168,6 +171,7 @@ app.post('/admin/create-user', authenticateToken, async (req, res) => {
         res.status(201).json({ message: 'Utilisateur créé avec succès', user: newUser });
     } catch (err) {
         console.error(err);
+        fs.appendFileSync('error.log', `[${new Date().toISOString()}] ${err}\n`); // Journalisation de l'erreur
         if (err.code === '23505') {
             return res.status(400).json({ error: 'L\'email est déjà utilisé.' });
         }
