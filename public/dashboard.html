@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tableau de Bord Administrateurs - Ecobill Pay</title>
+    <title>Tableau de Bord - Ecobill Pay</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <header>
-        <h1>Tableau de Bord Administrateurs</h1>
-        <button id="logoutButton" style="color:red;">Déconnexion</button>
+        <h1>Tableau de Bord</h1>
+        <!-- Ajoute des éléments de navigation si nécessaire -->
     </header>
     <main>
         <div id="dashboardContent">
@@ -20,11 +20,10 @@
         <p>&copy; 2024 Ecobill Pay</p>
     </footer>
 
-    <script src="dashboard.js"></script>
+    <script src="dashboard.js"></script> <!-- Ajout du fichier dashboard.js -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             fetchDashboard(); // Appel de la fonction pour récupérer les données
-            document.getElementById('logoutButton').addEventListener('click', logout);
         });
 
         async function fetchDashboard() {
@@ -32,41 +31,20 @@
                 const response = await fetch('/dashboard', {
                     method: 'GET',
                     headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        'Authorization': `Bearer ${localStorage.getItem('token')}` // Assurez-vous que le token est stocké dans le localStorage
                     }
                 });
-
+                
                 if (!response.ok) {
                     throw new Error(`Erreur lors de la récupération des données: ${response.status}`);
                 }
-
+                
                 const data = await response.json();
                 // Manipulez le DOM ici pour afficher les données du tableau de bord
-                const usersList = data.users.map(user => 
-                    `<li>${user.name} (${user.email}) <button onclick="deleteUser(${user.id})">Supprimer</button></li>`).join('');
-                document.getElementById('dashboardContent').innerHTML = `<ul>${usersList}</ul>`;
+                document.getElementById('dashboardContent').innerHTML = JSON.stringify(data);
             } catch (error) {
                 console.error('Erreur:', error);
                 document.getElementById('dashboardContent').innerHTML = 'Erreur lors de la récupération des données du tableau de bord.';
-            }
-        }
-
-        function logout() {
-            localStorage.removeItem('token');
-            window.location.href = 'login.html';
-        }
-
-        async function deleteUser(userId) {
-            const response = await fetch(`/deleteUser/${userId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-            });
-            if (response.ok) {
-                fetchDashboard(); // Recharger les données après suppression
-            } else {
-                alert('Erreur lors de la suppression de l\'utilisateur.');
             }
         }
     </script>

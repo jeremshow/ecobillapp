@@ -1,64 +1,42 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Liste des Utilisateurs - Ecobill Pay</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-    <header>
-        <h1>Liste des Utilisateurs</h1>
-        <button id="logoutBtn">Déconnexion</button>
-    </header>
-    <main>
-        <div id="userList"></div>
-    </main>
-    <footer>
-        <p>&copy; 2024 Ecobill Pay</p>
-    </footer>
+<script>
+    // Vérifie si le token existe
+    if (!localStorage.getItem('token')) {
+        alert('Vous devez être connecté pour accéder à cette page.');
+        window.location.href = 'login.html'; // Redirige vers la page de connexion
+    }
 
-    <script>
-        const fetchUsers = async () => {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                alert('Vous devez vous connecter pour accéder à la liste des utilisateurs.');
-                window.location.href = 'login.html';
-                return;
+    async function fetchUsers() {
+        const token = localStorage.getItem('token'); // Récupérer le token d'authentification à partir du localStorage
+
+        const response = await fetch('/users', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
             }
-
-            try {
-                const response = await fetch('/users', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error('Échec de la récupération des utilisateurs');
-                }
-
-                const users = await response.json();
-                const userListDiv = document.getElementById('userList');
-                userListDiv.innerHTML = '<h2>Utilisateurs :</h2>';
-
-                users.forEach(user => {
-                    const userItem = document.createElement('div');
-                    userItem.textContent = `${user.name} (${user.email})`;
-                    userListDiv.appendChild(userItem);
-                });
-            } catch (error) {
-                console.error(error);
-                alert('Une erreur s\'est produite lors de la récupération des utilisateurs.');
-            }
-        };
-
-        fetchUsers();
-
-        document.getElementById('logoutBtn').addEventListener('click', () => {
-            localStorage.removeItem('token');
-            window.location.href = 'login.html';
         });
-    </script>
-</body>
-</html>
+
+        if (response.ok) {
+            const users = await response.json();
+            const usersList = document.getElementById('usersList');
+            usersList.innerHTML = '';
+
+            users.forEach(user => {
+                const li = document.createElement('li');
+                li.textContent = `${user.name} (${user.email})`;
+                usersList.appendChild(li);
+            });
+        } else {
+            console.error('Erreur lors de la récupération des utilisateurs:', response.statusText);
+            // Gérer les erreurs, par exemple, si le token n'est pas valide
+            if (response.status === 403) {
+                alert('Accès interdit. Veuillez vous connecter.');
+                window.location.href = 'login.html'; // Rediriger vers la page de connexion
+            }
+        }
+    }
+
+    fetchUsers();
+</script>
+
+<ul id="usersList"></ul>

@@ -3,25 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bienvenue sur Ecobill Pay</title>
+    <title>Ecobill Pay</title>
     <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
     <header>
-        <h1>Ecobill Pay</h1>
+        <div class="container">
+            <h1>Bienvenue sur <span class="highlight">Ecobill Pay</span></h1>
+            <nav>
+                <a href="signup.html" class="btn">Inscription</a>
+                <a href="login.html" class="btn btn-secondary">Connexion</a>
+            </nav>
+        </div>
     </header>
     <main>
-        <section>
-            <h2>Bienvenue sur notre plateforme de paiement !</h2>
-            <p>Avec Ecobill Pay, vous pouvez effectuer des transactions rapidement et facilement.</p>
-            <a href="login.html"><button>Se connecter</button></a>
-            <form action="signup.html" method="GET" style="display:inline;">
-                <button type="submit">Créer un compte</button>
-            </form>
+        <section class="hero">
+            <div class="container">
+                <div class="content">
+                    <h2>Pour les Commerçants</h2>
+                    <p>Générez facilement des QR Codes pour recevoir des paiements.</p>
+                </div>
+                <div class="content">
+                    <h2>Pour les Clients</h2>
+                    <p>Payer rapidement en scannant un QR Code.</p>
+                </div>
+            </div>
         </section>
     </main>
     <footer>
-        <p>&copy; 2024 Ecobill Pay. Tous droits réservés.</p>
+        <div class="container">
+            <p>&copy; 2024 <span class="highlight">Ecobill Pay</span>. Tous droits réservés.</p>
+        </div>
     </footer>
 </body>
 </html>

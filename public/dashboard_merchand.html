@@ -2,44 +2,117 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tableau de Bord Commerçant - Ecobill Pay</title>
+    <title>Tableau de Bord Commerçant</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-qrcode/1.0/jquery.qrcode.min.js"></script>
+    <style>
+        /* Ajouter quelques styles pour un meilleur visuel */
+        #qr-code {
+            margin-top: 10px;
+        }
+        #loading {
+            display: none;
+            font-size: 18px;
+            color: blue;
+        }
+    </style>
 </head>
 <body>
     <header>
         <h1>Tableau de Bord Commerçant</h1>
-        <span id="merchantId"></span>
-        <button id="logoutBtn">Déconnexion</button>
+        <nav>
+            <a href="index.html">Accueil</a>
+            <a href="#" id="logout">Déconnexion</a>
+        </nav>
     </header>
     <main>
-        <div id="bankAccount">
-            <h2>Affilier votre compte bancaire</h2>
-            <form id="bankAccountForm">
-                <input type="text" id="bankAccountNumber" placeholder="Numéro de compte" required>
-                <button type="submit">Affilier</button>
-            </form>
-        </div>
-        <div id="qrCode">
-            <h2>QR-Code</h2>
-            <button id="generateQRCodeBtn">Générer mon QR-Code</button>
-            <div id="qrCodeDisplay" style="display:none;">
-                <h3>Votre QR-Code :</h3>
-                <img id="qrCodeImage" alt="QR-Code" />
-            </div>
-        </div>
-        <div id="transactionHistory"></div>
+        <section>
+            <h2>Générer un QR Code</h2>
+            <button id="generate-qr">Générer QR Code</button>
+            <div id="qr-code"></div>
+            <div id="loading">Chargement en cours...</div>
+        </section>
+        <section>
+            <h2>Transactions Récentes</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Client</th>
+                        <th>Montant</th>
+                        <th>Date</th>
+                        <th>Statut</th>
+                    </tr>
+                </thead>
+                <tbody id="transactions"></tbody>
+            </table>
+        </section>
     </main>
     <footer>
         <p>&copy; 2024 Ecobill Pay</p>
     </footer>
-
-    <script src="dashboard_merchand.js"></script>
     <script>
-        document.getElementById('logoutBtn').addEventListener('click', () => {
+        // Fonctionnalité de déconnexion
+        document.getElementById('logout').addEventListener('click', () => {
             localStorage.removeItem('token');
             window.location.href = 'login.html';
         });
+
+        // Générer le QR Code
+        document.getElementById('generate-qr').addEventListener('click', async () => {
+            const token = localStorage.getItem('token');
+            document.getElementById('loading').style.display = 'block'; // Afficher le message de chargement
+            const response = await fetch('/generate-qr', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+            const data = await response.json();
+            document.getElementById('loading').style.display = 'none'; // Cacher le message de chargement
+
+            if (data.qrData) {
+                document.getElementById('qr-code').innerHTML = '';
+                new QRCode(document.getElementById('qr-code'), data.qrData);
+            } else {
+                alert(data.error);
+            }
+        });
+
+        // Charger les transactions
+        async function loadTransactions() {
+            const token = localStorage.getItem('token');
+            document.getElementById('loading').style.display = 'block'; // Afficher le message de chargement
+            const response = await fetch('/merchant-transactions', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+            const data = await response.json();
+            document.getElementById('loading').style.display = 'none'; // Cacher le message de chargement
+
+            const transactions = document.getElementById('transactions');
+            transactions.innerHTML = ''; // Vider les transactions précédentes
+
+            if (data.transactions) {
+                data.transactions.forEach(tx => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${tx.id}</td>
+                        <td>${tx.clientName}</td>
+                        <td>${tx.amount}</td>
+                        <td>${tx.date}</td>
+                        <td>${tx.status}</td>
+                    `;
+                    transactions.appendChild(row);
+                });
+            } else {
+                alert(data.error || "Aucune transaction disponible.");
+            }
+        }
+
+        loadTransactions();
     </script>
 </body>
 </html>

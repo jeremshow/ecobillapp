@@ -2,39 +2,52 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tableau de Bord Client - Ecobill Pay</title>
+    <title>Tableau de Bord Client</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <header>
         <h1>Tableau de Bord Client</h1>
-        <span id="clientId"></span>
-        <button id="logoutBtn">Déconnexion</button>
+        <nav>
+            <a href="index.html">Accueil</a>
+            <a href="#" id="logout">Déconnexion</a>
+        </nav>
     </header>
     <main>
-        <div id="bankAccount">
-            <h2>Affilier votre compte bancaire</h2>
-            <form id="bankAccountForm">
-                <input type="text" id="bankAccountNumber" placeholder="Numéro de compte" required>
-                <button type="submit">Affilier</button>
-            </form>
-        </div>
-        <div id="qrScanner">
-            <h2>Scanner le QR-Code</h2>
-            <button id="scanQRCodeBtn">Scanner</button>
-        </div>
-        <div id="transactionHistory"></div>
+        <section>
+            <h2>Affilier votre carte</h2>
+            <button id="link-card">Affilier Carte</button>
+        </section>
+        <section>
+            <h2>Scanner QR Code</h2>
+            <button id="scan-qr">Scanner QR Code</button>
+        </section>
     </main>
     <footer>
         <p>&copy; 2024 Ecobill Pay</p>
     </footer>
-
-    <script src="dashboard_client.js"></script>
     <script>
-        document.getElementById('logoutBtn').addEventListener('click', () => {
+        // Fonctionnalité de déconnexion
+        document.getElementById('logout').addEventListener('click', () => {
             localStorage.removeItem('token');
             window.location.href = 'login.html';
+        });
+
+        // Script pour affilier la carte et scanner le QR Code
+        document.getElementById('link-card').addEventListener('click', async () => {
+            const token = localStorage.getItem('token');
+            const response = await fetch('/link-card', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+            const data = await response.json();
+            alert(data.message || data.error);
+        });
+
+        document.getElementById('scan-qr').addEventListener('click', () => {
+            alert('Scanner le QR Code du commerçant.');
         });
     </script>
 </body>
