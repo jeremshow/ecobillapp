@@ -6,7 +6,7 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
     const usertype = document.getElementById('usertype').value; // Récupère le type d'utilisateur
 
     try {
-        const response = await fetch('/signup', { // Utilisez la route d'inscription
+        const response = await fetch('http://localhost:5452/signup', { // Remplace par le bon port si nécessaire
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -14,21 +14,20 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
             body: JSON.stringify({ name, email, password, usertype }) // Utilise le type d'utilisateur sélectionné
         });
 
+        // Logging du statut de la réponse et son contenu pour le debug
+        console.log('Statut de la réponse:', response.status);
+        const responseData = await response.text(); // Lire la réponse comme texte
+        console.log('Contenu de la réponse:', responseData);
+
         if (response.ok) {
-            const data = await response.json();
+            const data = JSON.parse(responseData); // Parse le JSON de la réponse
             // Connexion automatique après la création du compte
             localStorage.setItem('token', data.token); // Sauvegarder le token
             localStorage.setItem('usertype', usertype); // Sauvegarder le type d'utilisateur
             window.location.href = 'dashboard_client.html'; // Redirige vers le tableau de bord approprié
         } else {
             let errorMessage = 'Erreur lors de la création du compte';
-            const contentType = response.headers.get('content-type');
-            if (contentType && contentType.includes('application/json')) {
-                const errorData = await response.json();
-                errorMessage += ': ' + (errorData.error || 'Erreur inconnue'); // Corriger ici pour accéder au message d'erreur
-            } else {
-                errorMessage += ': ' + await response.text(); // Gérer les réponses texte
-            }
+            errorMessage += ': ' + (responseData || 'Erreur inconnue');
             const errorDisplay = document.getElementById('error-message');
             errorDisplay.textContent = errorMessage;
             errorDisplay.style.display = 'block'; // Affiche le message d'erreur
